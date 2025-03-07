@@ -1,0 +1,28 @@
+{
+  "name": "admindashboardassist",
+  "version": "1.0.0",
+  "description": "App for calculating company resources, costs and benefits based on different campaigns",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Paupaauu/AdminDashboardAssist.git"
+  },
+  "keywords": [
+    "Dashboard",
+    "Admin",
+    "MarginCalculator"
+  ],
+  "author": "Pau Durà",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Paupaauu/AdminDashboardAssist/issues"
+  },
+  "homepage": "https://github.com/Paupaauu/AdminDashboardAssist#readme",
+  "dependencies": {
+    "electron": "^35.0.0"
+  }
+}
