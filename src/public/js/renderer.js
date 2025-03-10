@@ -1,12 +1,11 @@
-  const { ipcRenderer } = require("electron");
+const { ipcRenderer } = require("electron");
 
+document.addEventListener("DOMContentLoaded", () => {
+  const buttonTest = document.getElementById("buttonTest");
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const buttonTest = document.getElementById("buttonTest");
-  
-    if (buttonTest) {
-      buttonTest.addEventListener("click", () => {
-        ipcRenderer.send("open-settings"); // Envía la señal al proceso principal
-      });
-    }
-  });
+  if (buttonTest) {
+    buttonTest.addEventListener("click", () => {
+      ipcRenderer.send("open-settings"); // Envía la señal al proceso principal
+    });
+  }
+});

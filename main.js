@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 
 let mainWindow; // Variable global para la ventana principal
 
@@ -49,13 +49,21 @@ app.whenReady().then(() => {
     });
 });
 
+//Codigo para que funcione el paquete electron-reload (solo cuando esté en desarrollo, no cuando esté en producción)
+//if para saber si estamos en entorno distinto al de producción (desarrollo)
+if (process.env.NODE_ENV !== 'production') {
+    require('electron-reload')(__dirname, {
+
+    })
+}
+
+
 //--------------------------------------------------------------------------------------------------------
 
-//Codigo para cargar pagina de settings
-let settingsWindow; //Creamos variable global igual que hemos hecho en la ventana principal
+//Codigo para abrir nueva ventana settings
+let settingsWindow; 
 
 // Escucha el evento enviado desde el renderer para abrir settings.html
-
 ipcMain.on("open-settings", () => {
     if (!settingsWindow) {
       settingsWindow = new BrowserWindow({
@@ -67,7 +75,7 @@ ipcMain.on("open-settings", () => {
         },
       });
   
-      settingsWindow.loadFile("src/views/settings.html");
+      settingsWindow.loadFile("../src/views/settings.html");
   
       // Cuando se cierra la ventana, limpiamos la variable
       settingsWindow.on("closed", () => {

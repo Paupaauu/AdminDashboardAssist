@@ -23,6 +23,8 @@
   },
   "homepage": "https://github.com/Paupaauu/AdminDashboardAssist#readme",
   "dependencies": {
-    "electron": "^35.0.0"
-  }
+    "electron": "^35.0.0",
+    "electron-reload": "^2.0.0-alpha.1"
+  },
+  "devDependencies": {}
 }
