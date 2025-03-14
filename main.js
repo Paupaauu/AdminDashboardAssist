@@ -63,23 +63,7 @@ if (process.env.NODE_ENV !== 'production') {
 //Codigo para abrir nueva ventana settings
 let settingsWindow; 
 
-// Escucha el evento enviado desde el renderer para abrir settings.html
-ipcMain.on("open-settings", () => {
-    if (!settingsWindow) {
-      settingsWindow = new BrowserWindow({
-        width: 600,
-        height: 400,
-        webPreferences: {
-          nodeIntegration: true,
-          contextIsolation: false,
-        },
-      });
-  
-      settingsWindow.loadFile("../src/views/settings.html");
-  
-      // Cuando se cierra la ventana, limpiamos la variable
-      settingsWindow.on("closed", () => {
-        settingsWindow = null;
-      });
-    }
+  // Escuchar el mensaje del renderer para cambiar de vista
+  ipcMain.on("navigate", (event, page) => {
+    mainWindow.loadFile(`src/views/${page}.html`);
   });
