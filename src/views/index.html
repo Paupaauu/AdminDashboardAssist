@@ -10,31 +10,62 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <!--Link a nuestra propia hoja de estilos-->
     <link rel="stylesheet" href="../public/css/ownStyles.css">
+     <!--Link a libreria de iconos de bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
 </head>
 
 <!--Main page of the app-->
 
 <body>
-    <main>
-        <!--Seccion 1 con tres columnas-->
-        <div class="container-lg test1">
-            <div class="row">
-                <div class="col-6 test3" >
-                    col1
-                </div>
-                <div class="col">
-                    col2
-                </div>
-                <div class="col">
-                    <button type="button" class="btn btn-secondary btn-sm" id="buttonTest">Test button</button>
-                </div>
+    <!--Pantalla principal SIDEBAR + CONTENIDO-->
+    <div class="container-fluid vh-100">
+        <!--vh-100 hace que ocupe todo el alto de la pantalla, hace falta que el row de abajo tenga h-100 tambien, sin no funciona-->
+        <div class="row h-100">
+            <!--Sidebar-->
+            <div class="col-2 d-flex flex-column flex-shrink-0 p-3 text-bg-dark">
+                <!--Encabezado de barra de navegacion-->
+                <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+                    <i class="bi bi-lightning pe-none me-2" style="font-size: 32px;"></i>
+                    <span class="fs-4">Assist Digital</span>
+                </a>
+                <hr>
+
+                <!--Barra lateral navegacion-->
+                <ul class="nav nav-pills flex-column mb-auto">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="main" onclick="loadView('main')">
+                            <i class="bi bi-house-door pe-none me-2"></i> Main
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="settings" onclick="loadView('settings')">
+                            <i class="bi bi-house-door pe-none me-2"></i> Settings
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="sites" onclick="loadView('sites')">
+                            <i class="bi bi-speedometer2 pe-none me-2"></i> Sites
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white" id="clients" onclick="loadView('clients')">
+                            <i class="bi bi-table pe-none me-2"></i> Clients
+                        </a>
+                    </li>
+                </ul>
+                
+            </div>
+
+            <!--Contendio pantalla-->
+            <div class="col">
+                <main id="content"></main> <!--Apartado donde se carga la app-->
             </div>
         </div>
+    </div>
 
-    </main>
 
-
-<!--SCRIPSTS-->
+    <!--SCRIPSTS-->
 
     <!--Scrip para cargar bootstrap-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
