@@ -18,6 +18,9 @@ function createWindow() {
 
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/views/index.html");
+   mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+
+    
 }
 
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
@@ -60,10 +63,4 @@ if (process.env.NODE_ENV !== 'production') {
 
 //--------------------------------------------------------------------------------------------------------
 
-//Codigo para abrir nueva ventana settings
-let settingsWindow; 
-
-  // Escuchar el mensaje del renderer para cambiar de vista
-  ipcMain.on("navigate", (event, page) => {
-    mainWindow.loadFile(`src/views/${page}.html`);
-  });
+//Codigo para abrir diferentes vistas

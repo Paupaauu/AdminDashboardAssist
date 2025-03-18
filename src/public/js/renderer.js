@@ -1,23 +1,22 @@
-const { ipcRenderer } = require("electron");
 
-// Función para cambiar de vista
-function navigateTo(page) {
-  ipcRenderer.send("navigate", page);
+
+// Función para cambiar de vista y marcar la opción activa
+function loadView(view) {
+  //Eliminamos la clase 'active' de todos los enlaces
+  const links = document.querySelectorAll('.nav-link');
+  links.forEach(link => link.classList.remove('active')); 
+
+  // Ahora, agregamos la clase 'active' al enlace correspondiente
+  const selectedLink = document.getElementById(view);
+  if (selectedLink) {
+    selectedLink.classList.add('active');
+  }
+
+  // Cargar la vista correspondiente
+  fetch(`${view}.html`)
+      .then(response => response.text())
+      .then(html => {
+          document.getElementById('content').innerHTML = html;
+      })
+      .catch(error => console.error('Error al cargar la vista:', error));
 }
-
-// Boton para ir a settings
-document.addEventListener("DOMContentLoaded", () => {
-  const buttonTest = document.getElementById("buttonTest");
-  if (buttonTest) {
-    buttonTest.addEventListener("click", () => navigateTo("settings"));
-  }
-});
-
-//Boton para volver a index
-document.addEventListener("DOMContentLoaded", () => {
-  const buttonBack = document.getElementById("buttonBack");
-  if (buttonBack) {
-    buttonBack.addEventListener("click", () => navigateTo("index"));
-  }
-});
-
