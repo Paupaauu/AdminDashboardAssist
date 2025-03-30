@@ -1,0 +1,19 @@
+[
+    {
+        "_id": "AD12500",
+        "email":"pau.dura@assistdigital.com",
+        "permissions":"all",
+        "Role": "WFM Specialist",
+        "Site": "Valencia" 
+    },
+    {
+        "_id": "AD12683",
+        "email":"sebastian.mainente@assistdigital.com",
+        "permissions":"view",
+        "Role": "WFM",
+        "Site": "Valencia" 
+    }
+
+    
+]
+

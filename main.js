@@ -1,24 +1,25 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 
 let mainWindow; // Variable global para la ventana principal
 
 // Función que crea la ventana principal
 function createWindow() {
     mainWindow = new BrowserWindow({
-        width: 800,
-        height: 600,
+        width: 1700,
+        height: 1200,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false //Permite que window y otros objetos del contexto de Electron puedan interactuar directamente con Node.js en el renderer
         },
     });
 
+
     //quita menú por defecto de chromium
     mainWindow.setMenu(null);
 
     // Carga el archivo HTML en la ventana
-    mainWindow.loadFile("./src/views/index.html");
-   mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+    mainWindow.loadFile("./src/frontend/views/index.html");
+   //mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 
     
 }
@@ -63,4 +64,3 @@ if (process.env.NODE_ENV !== 'production') {
 
 //--------------------------------------------------------------------------------------------------------
 
-//Codigo para abrir diferentes vistas

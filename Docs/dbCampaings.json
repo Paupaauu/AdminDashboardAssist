@@ -1,0 +1,60 @@
+[
+    {
+        "Campaign": "Stellantis SOL ES",
+        "Client": "Stellantis SOL",
+        "MarketUnit": "Sales",
+        "Site": ["Valencia"],
+        "Language": ["ES"],
+        "Invoicing_Type": ["FT_ByContract"],
+        "Activities_Used": [
+            {"Activity": "Team Leader Stellantis ES", "TypeOfActivity": "TL"},
+            {"Activity": "Stellantis_ES", "TypeOfActivity": "Productive"},
+            {"Activity": "TR_NewHires_Stellantis_ES", "TypeOfActivity": "New Hires Training"},
+            {"Activity": "TR_PaidTraining_Stellantis_ES", "TypeOfActivity": "Paid Training"},
+            {"Activity": "TR_UnpaidTraining_Stellantis_ES", "TypeOfActivity": "Unpaid Training"}
+        ]
+    },
+    {
+        "Campaign": "Stellantis Finance ES",
+        "Client": "Stellantis Backoffice ES",
+        "MarketUnit": "Sales",
+        "Site": ["Valencia"],
+        "Language": ["ES"],
+        "Invoicing_Type": ["FT_ByContract"],
+        "Activities_Used": [
+            {"Activity": "Stellantis_Finance", "TypeOfActivity": "Productive"},
+            {"Activity": "TR_NewHires_Stellantis_FinanceES", "TypeOfActivity": "New Hires Training"},
+            {"Activity": "TR_PaidTraining_Stellantis_FinanceES", "TypeOfActivity": "Paid Training"},
+            {"Activity": "TR_UnpaidTraining_Stellantis_FinanceES", "TypeOfActivity": "Unpaid Training"}
+        ]
+    },
+    {
+        "Campaign": "Dazn CP ES",
+        "Client": "Dazn",
+        "MarketUnit": "International",
+        "Site": ["Valencia"],
+        "Language": ["ES"],
+        "Invoicing_Type": ["Productive_Hours"],
+        "Activities_Used": [
+            {"Activity": "TL_Dazn", "TypeOfActivity": "TL"},
+            {"Activity": "Dazn_CP_SPA", "TypeOfActivity": "Productive"},
+            {"Activity": "LongAbsences_Dazn", "TypeOfActivity": "LongAbsence"}
+        ]
+    },
+    {
+        "Campaign": "XP IT",
+        "Client": "Stellantis Brands",
+        "MarketUnit": "Automotive",
+        "Site": ["Tirana3", "VimodroneCSC"],
+        "Language": ["IT"],
+        "Invoicing_Type": ["Productive_Hours"],
+        "Activities_Used": [
+            {"Activity": "TL XP IT", "TypeOfActivity": "TL"},
+            {"Activity": "XP IT Casi", "TypeOfActivity": "Productive"},
+            {"Activity": "XP IT Inbound", "TypeOfActivity": "Productive"},
+            {"Activity": "XP IT Mail", "TypeOfActivity": "Productive"},
+            {"Activity": "LongAbsences_XP IT", "TypeOfActivity": "LongAbsence"},
+            {"Activity": "Training Stellantis XP IT", "TypeOfActivity": "Paid Training"}
+        ]
+    }
+]
