@@ -1,6 +1,9 @@
+//Conexión a la base de datos MongoDB utilizando Mongoose
+// Este archivo se encarga de establecer la conexión a la base de datos MongoDB utilizando Mongoose.
+// Importar mongoose    
 const mongoose = require('mongoose');
 
-const connectDB = async () => {
+const connectDB = async () => { 
     try {
         await mongoose.connect('mongodb://127.0.0.1:27017/AssistAdminDashboard', {
             useNewUrlParser: true,

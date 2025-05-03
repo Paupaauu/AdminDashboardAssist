@@ -1,4 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const connectDB = require("./src/backend/config/db");
+const Campaign = require("./src/backend/models/campaigns");
+let newCampaignWindow = null;
+
 
 let mainWindow; // Variable global para la ventana principal
 
@@ -19,7 +23,7 @@ function createWindow() {
 
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/frontend/views/index.html");
-   //mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+   mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 
     
 }
@@ -27,6 +31,8 @@ function createWindow() {
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
 app.whenReady().then(() => {
     createWindow();
+    connectDB(); // Conectar a MongoDB
+
 
     //Este código cierra completamente la aplicación cuando todas las ventanas han sido cerradas, excepto en macOS
     app.on("window-all-closed", () => {
@@ -61,6 +67,61 @@ if (process.env.NODE_ENV !== 'production') {
     })
 }
 
+ipcMain.on('open-new-campaign-window', () => {
+    if (newCampaignWindow) {
+        newCampaignWindow.focus();
+        return;
+    }
+
+    newCampaignWindow = new BrowserWindow({
+        width: 500,
+        height: 400,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    newCampaignWindow.setMenu(null);
+    newCampaignWindow.loadFile('./src/frontend/views/newCampaign.html');
+
+    newCampaignWindow.on('closed', () => {
+        newCampaignWindow = null;
+    });
+});
+
+ipcMain.on('close-new-campaign-window', () => {
+    if (newCampaignWindow) {
+        newCampaignWindow.close();
+        newCampaignWindow = null;
+    }
+
+    // Actualiza la vista de campañas
+    mainWindow.webContents.send('refresh-campaigns');
+});
+
+ipcMain.on('get-campaigns', async (event) => {
+    try {
+        const campaigns = await Campaign.find().populate('sites').populate('activities_Used');
+        event.sender.send('campaigns-data', campaigns);
+    } catch (error) {
+        console.error('Error obteniendo campañas:', error);
+        event.sender.send('campaigns-data', []); // envía array vacío si falla
+    }
+});
+
+ipcMain.on('add-campaign', async (event, campaignData) => {
+    try {
+        const newCampaign = new Campaign(campaignData);
+        await newCampaign.save();
+        event.sender.send('add-campaign-success');
+    } catch (error) {
+        console.error('Error al guardar campaña:', error);
+        event.sender.send('add-campaign-error', error.message);
+    }
+});
 
 //--------------------------------------------------------------------------------------------------------
-
+  
