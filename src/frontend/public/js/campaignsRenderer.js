@@ -16,7 +16,7 @@ ipcRenderer.on('campaigns-data', (event, campaigns) => {
     campaigns.forEach(c => {
         cadenaDOM += `
             <div style="margin-bottom: 1em;">
-                <label><strong>${c.campaing_name}</strong></label><br>        
+                <label><strong>${c.campaign_name}</strong></label><br>        
                 <label><strong>${c.client}</strong></label><br>
                 <label>${c.language}</label>
             </div>`;

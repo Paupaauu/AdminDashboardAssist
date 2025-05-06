@@ -3,7 +3,7 @@
 const mongoose = require('mongoose');
 
 const campaignsSchema = new mongoose.Schema({
-    campaing_name: { 
+    campaign_name: { 
         type: String, 
         required: true, 
         unique: true

@@ -23,7 +23,7 @@
                 alert("Debe escribir todos los campos");
             } else {
                 ipcRenderer.send('add-campaign', {
-                    campaing_name: txtNewCampaign,
+                    campaign_name: txtNewCampaign,
                     client: txtNewClient,
                     marketUnit: "Default",
                     language: txtNewLanguage

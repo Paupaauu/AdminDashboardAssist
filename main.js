@@ -23,9 +23,9 @@ function createWindow() {
 
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/frontend/views/index.html");
-   mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+    mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 
-    
+
 }
 
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
@@ -69,28 +69,32 @@ if (process.env.NODE_ENV !== 'production') {
 
 ipcMain.on('open-new-campaign-window', () => {
     if (newCampaignWindow) {
-        newCampaignWindow.focus();
-        return;
+      newCampaignWindow.focus();
+      return;
     }
-
+  
+    // 1) Crear la ventana y cerrar correctamente el objeto de configuración
     newCampaignWindow = new BrowserWindow({
-        width: 500,
-        height: 400,
-        parent: mainWindow,
-        modal: true,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        }
-    });
-
+      width: 500,
+      height: 400,
+      parent: mainWindow,
+      modal: true,
+      webPreferences: {
+        nodeIntegration: true,
+        contextIsolation: false
+      } 
+    });   
+  
+    
     newCampaignWindow.setMenu(null);
     newCampaignWindow.loadFile('./src/frontend/views/newCampaign.html');
-
+    newCampaignWindow.webContents.openDevTools();
+  
     newCampaignWindow.on('closed', () => {
-        newCampaignWindow = null;
+      newCampaignWindow = null;
     });
-});
+  });
+
 
 ipcMain.on('close-new-campaign-window', () => {
     if (newCampaignWindow) {
@@ -124,4 +128,3 @@ ipcMain.on('add-campaign', async (event, campaignData) => {
 });
 
 //--------------------------------------------------------------------------------------------------------
-  
