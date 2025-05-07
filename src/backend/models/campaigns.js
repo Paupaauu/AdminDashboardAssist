@@ -1,4 +1,4 @@
-//Define el esquema de la base de datos para las campañas
+//Define el esquema de la base de datos para los documents de campañas
 
 const mongoose = require('mongoose');
 

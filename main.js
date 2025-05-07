@@ -1,10 +1,9 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const connectDB = require("./src/backend/config/db");
 const Campaign = require("./src/backend/models/campaigns");
-let newCampaignWindow = null;
-
-
 let mainWindow; // Variable global para la ventana principal
+let newCampaignWindow = null; // Variable global para la ventana de crear nueva campaña
+
 
 // Función que crea la ventana principal
 function createWindow() {
@@ -17,38 +16,30 @@ function createWindow() {
         },
     });
 
-
     //quita menú por defecto de chromium
     mainWindow.setMenu(null);
-
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/frontend/views/index.html");
-    mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
-
-
+    //mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 }
 
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
 app.whenReady().then(() => {
     createWindow();
-    connectDB(); // Conectar a MongoDB
+    connectDB(); // Conectar¡mos a MongoDB cuando la app esté lista
 
-
-    //Este código cierra completamente la aplicación cuando todas las ventanas han sido cerradas, excepto en macOS
+    //Este código cierra completamente la aplicación cuando todas las ventanas han sido cerradas, excepto en macOS (porque sigue otro proceso)
     app.on("window-all-closed", () => {
         if (process.platform !== "darwin") app.quit();
     });
 
     /*
       process.platform es una propiedad de Node.js que devuelve el sistema operativo en el que se ejecuta la aplicación.
-  
       "win32" → Windows
       "linux" → Linux
       "darwin" → macOS
-  
       si es darwin no llamamos a app.quit() para seguir la convencion de mac y dejar la aplicacion en segundo plano 
       */
-
 
     // En el caso de Mac, si la aplicación se queda en segundo plano y se reactiva este evento que se dispara
     app.on("activate", () => {
@@ -67,33 +58,32 @@ if (process.env.NODE_ENV !== 'production') {
     })
 }
 
+/*----Lógica para Crear Campaña--------------------------------------------------------------------*/
 ipcMain.on('open-new-campaign-window', () => {
     if (newCampaignWindow) {
-      newCampaignWindow.focus();
-      return;
+        newCampaignWindow.focus();
+        return;
     }
-  
-    // 1) Crear la ventana y cerrar correctamente el objeto de configuración
+
+    // Creamos la ventana de nueva campaña
     newCampaignWindow = new BrowserWindow({
-      width: 500,
-      height: 400,
-      parent: mainWindow,
-      modal: true,
-      webPreferences: {
-        nodeIntegration: true,
-        contextIsolation: false
-      } 
-    });   
-  
-    
+        width: 575,
+        height: 600,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
     newCampaignWindow.setMenu(null);
     newCampaignWindow.loadFile('./src/frontend/views/newCampaign.html');
-    newCampaignWindow.webContents.openDevTools();
-  
+    // newCampaignWindow.webContents.openDevTools();
+
     newCampaignWindow.on('closed', () => {
-      newCampaignWindow = null;
+        newCampaignWindow = null;
     });
-  });
+});
 
 
 ipcMain.on('close-new-campaign-window', () => {
@@ -106,17 +96,7 @@ ipcMain.on('close-new-campaign-window', () => {
     mainWindow.webContents.send('refresh-campaigns');
 });
 
-ipcMain.on('get-campaigns', async (event) => {
-    try {
-        const campaigns = await Campaign.find();
-        console.log('Campañas obtenidas sin populate:', campaigns); // Log para verificar los datos
-        event.sender.send('campaigns-data', campaigns); // Envía las campañas al frontend
-    } catch (error) {
-        console.error('Error obteniendo campañas:', error);
-        event.sender.send('campaigns-data', []); // Envía array vacío si falla
-    }
-});
-
+//Recibimos los datos de la nueva campaña desde el renderer.js y los guardamos en la base de datos y enviamos un mensaje de éxito o error al renderer.js
 ipcMain.on('add-campaign', async (event, campaignData) => {
     try {
         const newCampaign = new Campaign(campaignData);

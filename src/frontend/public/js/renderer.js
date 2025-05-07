@@ -1,5 +1,10 @@
-// Código actualizado para manejar el contenido dinámico en el index.html
+// Código para manejar el contenido de index.html
 const { ipcRenderer } = require('electron');
+
+// Inicializar la vista principal al cargar la aplicación
+window.onload = () => {
+  loadView('main'); 
+};
 
 // Función para cargar contenido dinámico
 function loadView(view) {
@@ -11,7 +16,7 @@ function loadView(view) {
     selectedLink.classList.add('active');
   }
 
-  // Lógica para renderizar contenido dinámico según la vista seleccionada
+  // Lógica para mostrar contenido dinámico según la vista seleccionada
   const content = document.getElementById('content');
   content.innerHTML = ''; // Limpia el contenido actual
 
@@ -33,34 +38,18 @@ function loadView(view) {
   }
 }
 
-// Función para renderizar campañas dinámicamente
+//--------------------CAMPAÑAS--------------------//
+// Función para renderizar la vista de campañas
 function renderCampaigns(content) {
   content.innerHTML = `
     <h1>Campañas existentes</h1>
-    <button id="btnOpenNewCampaign">Nueva campaña</button>
-    <div id="campaignsWrapper"></div>
+    <button id="btnOpenNewCampaign" class="btn btn-primary">Nueva campaña</button>
   `;
-
+// Botón para abrir la ventana de nueva campaña
   const btnOpenNewCampaign = document.getElementById("btnOpenNewCampaign");
   btnOpenNewCampaign.addEventListener('click', () => {
     ipcRenderer.send('open-new-campaign-window');
   });
 
-  // Obtener y mostrar campañas
-  ipcRenderer.send('get-campaigns');
-  ipcRenderer.on('campaigns-data', (event, campaigns) => {
-    const campaignsWrapper = document.getElementById("campaignsWrapper");
-    campaignsWrapper.innerHTML = campaigns.map(c => `
-      <div style="margin-bottom: 1em;">
-        <label><strong>${c.campaign_name}</strong></label><br>        
-        <label><strong>${c.client}</strong></label><br>
-        <label>${c.language}</label>
-      </div>
-    `).join('');
-  });
+  
 }
-
-// Inicializar la vista principal al cargar la aplicación
-window.onload = () => {
-  loadView('main');
-};

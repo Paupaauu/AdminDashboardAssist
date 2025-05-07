@@ -1,71 +1,80 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin App</title>
-    <!--Link a bootstrap-->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!--Link a nuestra propia hoja de estilos-->
-    <link rel="stylesheet" href="../public/css/ownStyles.css">
-    <!--Link a libreria de iconos de bootstrap-->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Admin App</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
 </head>
 
 <body>
-    <!--Pantalla principal SIDEBAR + CONTENIDO-->
-    <div class="container-fluid vh-100">
-        <div class="row h-100">
-            <!--Sidebar-->
-            <div class="col-2 d-flex flex-column flex-shrink-0 p-3 text-bg-dark">
-                <a href="#" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-                    
-                    <img
-                      src="../public/img/logo.png"
-                      alt="Logo Assist Digital"
-                      class="me-2"
-                      style="width: 32px; height: 32px;"
-                    />
-                    <span class="fs-4">Assist Digital</span>
-                  </a>
-                <hr>
-                <ul class="nav nav-pills flex-column mb-auto">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white" id="main" onclick="loadView('main')">
-                            <i class="bi bi-house-door pe-none me-2"></i> Main
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white" id="users" onclick="loadView('users')">
-                            <i class="bi bi-house-door pe-none me-2"></i> Users
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white" id="campaigns" onclick="loadView('campaigns')">
-                            <i class="bi bi-speedometer2 pe-none me-2"></i> Campaigns
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white" id="clients" onclick="loadView('clients')">
-                            <i class="bi bi-table pe-none me-2"></i> Clients
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <!--Contenido dinámico-->
-            <div class="col">
-                <main id="content"></main>
-            </div>
-        </div>
-    </div>
+  <div class="container-fluid vh-100">
+    <div class="row h-100">
+      <!-- Barra superior con botón toggler sólo en sm -->
+      <header class="d-md-none bg-dark text-white w-100 py-2 px-3">
+        <button class="btn btn-outline-light" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#sidebarMenu"
+                aria-controls="sidebarMenu"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <i class="bi bi-list"></i>
+        </button>
+        <span class="ms-2 h5 mb-0">Assist Digital</span>
+      </header>
 
-    <!--Scripts-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-    <script src="../public/js/renderer.js"></script>
+      <!-- SIDEBAR -->
+      <nav id="sidebarMenu" class="collapse d-md-block col-12 col-md-2 bg-dark text-white sidebar">
+        <div class="position-sticky pt-3">
+          <a href="#" class="d-flex align-items-center mb-3 text-white text-decoration-none">
+            <img src="../public/img/logo.png" alt="Logo Assist Digital" class="me-2" width="32" height="32">
+            <span class="fs-4">Assist Digital</span>
+          </a>
+          <hr class="text-secondary">
+          <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+              <a href="#" id="main" class="nav-link text-white" onclick="loadView('main')">
+                <i class="bi bi-house-door me-2"></i>Main
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" id="users" class="nav-link text-white" onclick="loadView('users')">
+                <i class="bi bi-people me-2"></i>Users
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" id="campaigns" class="nav-link text-white" onclick="loadView('campaigns')">
+                <i class="bi bi-speedometer2 me-2"></i>Campaigns
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" id="clients" class="nav-link text-white" onclick="loadView('clients')">
+                <i class="bi bi-building me-2"></i>Clients
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <!-- CONTENIDO -->
+      <main class="col-12 col-md-10 ms-sm-auto px-md-4 py-4">
+        <div id="content"></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Script para Bootstrap -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+  <!-- Script de renderer -->
+  <script src="../public/js/renderer.js"></script>
 </body>
 
 </html>
