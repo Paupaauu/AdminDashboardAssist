@@ -108,11 +108,12 @@ ipcMain.on('close-new-campaign-window', () => {
 
 ipcMain.on('get-campaigns', async (event) => {
     try {
-        const campaigns = await Campaign.find().populate('sites').populate('activities_Used');
-        event.sender.send('campaigns-data', campaigns);
+        const campaigns = await Campaign.find();
+        console.log('Campañas obtenidas sin populate:', campaigns); // Log para verificar los datos
+        event.sender.send('campaigns-data', campaigns); // Envía las campañas al frontend
     } catch (error) {
         console.error('Error obteniendo campañas:', error);
-        event.sender.send('campaigns-data', []); // envía array vacío si falla
+        event.sender.send('campaigns-data', []); // Envía array vacío si falla
     }
 });
 
