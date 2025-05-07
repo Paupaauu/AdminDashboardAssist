@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const connectDB = require("./src/backend/config/db");
-const Campaign = require("./src/backend/models/campaigns");
+const Campaign = require("./src/backend/models/campaigns"); // Importamos el modelo campaigns
+const Site = require('./src/backend/models/sites'); // Importar el modelo sites
+const Activities = require('./src/backend/models/activities'); // Importar el modelo activities
 let mainWindow; // Variable global para la ventana principal
 let newCampaignWindow = null; // Variable global para la ventana de crear nueva campaña
 
@@ -20,7 +22,7 @@ function createWindow() {
     mainWindow.setMenu(null);
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/frontend/views/index.html");
-    //mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+    mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 }
 
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
@@ -108,4 +110,13 @@ ipcMain.on('add-campaign', async (event, campaignData) => {
     }
 });
 
-//--------------------------------------------------------------------------------------------------------
+//-------Lógica para mostrar Campaña--------------------------------------------------------------------------------------------------
+ipcMain.handle('get-campaigns', async () => {
+    try {
+        const campaigns = await Campaign.find().lean(); // Obtenemos todas las campañas de la base de datos
+        return campaigns; // Devolvemos las campañas al renderer.js
+    } catch (error) {
+        console.error('Error al obtener campañas:', error);
+        throw error;
+    }
+});

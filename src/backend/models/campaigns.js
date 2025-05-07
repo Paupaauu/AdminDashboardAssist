@@ -1,5 +1,4 @@
-//Define el esquema de la base de datos para los documents de campañas
-
+// Define el esquema de la base de datos para las campañas
 const mongoose = require('mongoose');
 
 const campaignsSchema = new mongoose.Schema({
@@ -20,8 +19,8 @@ const campaignsSchema = new mongoose.Schema({
     },
     
     sites: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'site' }],
+        type: String 
+    }],
 
     language: {
         type: String, 
@@ -33,9 +32,9 @@ const campaignsSchema = new mongoose.Schema({
         required: false 
     },
 
-    activities_Used: [{ 
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'activities' }]
+    activities_Used:[{ 
+        type: String 
+    }]
 });
 
 module.exports = mongoose.model('campaigns', campaignsSchema);

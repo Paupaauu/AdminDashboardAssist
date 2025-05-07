@@ -40,16 +40,66 @@ function loadView(view) {
 
 //--------------------CAMPAÑAS--------------------//
 // Función para renderizar la vista de campañas
-function renderCampaigns(content) {
+async function renderCampaigns(content) {
   content.innerHTML = `
     <h1>Campañas existentes</h1>
-    <button id="btnOpenNewCampaign" class="btn btn-primary">Nueva campaña</button>
+    <button id="btnOpenNewCampaign" class="btn btn-primary mb-3">Nueva campaña</button>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Cliente</th>
+          <th>Unidad de Mercado</th>
+          <th>Idioma</th>
+          <th>Horas Productivas</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="campaignsTableBody">
+        <tr><td colspan="7">Cargando campañas...</td></tr>
+      </tbody>
+    </table>
   `;
-// Botón para abrir la ventana de nueva campaña
+
+  // Botón para abrir la ventana de nueva campaña
   const btnOpenNewCampaign = document.getElementById("btnOpenNewCampaign");
   btnOpenNewCampaign.addEventListener('click', () => {
     ipcRenderer.send('open-new-campaign-window');
   });
 
-  
+  // Solicitar campañas al backend
+  try {
+    const campaigns = await ipcRenderer.invoke('get-campaigns');
+    const tableBody = document.getElementById('campaignsTableBody');
+    tableBody.innerHTML = ''; // Limpia el contenido actual
+
+    // Rellenar la tabla con las campañas
+    if (campaigns.length > 0) {
+      campaigns.forEach((campaign, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${campaign.campaign_name}</td>
+          <td>${campaign.client}</td>
+          <td>${campaign.marketUnit}</td>
+          <td>${campaign.language}</td>
+          <td>${campaign.productive_hours_revenue || 'N/A'}</td>
+          <td>
+            <button class="btn btn-sm btn-primary">Editar</button>
+            <button class="btn btn-sm btn-danger">Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="7">No hay campañas disponibles.</td></tr>`;
+    }
+  } catch (error) {
+    console.error('Error al obtener campañas:', error);
+    const tableBody = document.getElementById('campaignsTableBody');
+    tableBody.innerHTML = `<tr><td colspan="7">Error al cargar campañas.</td></tr>`;
+  }
 }
+
+
