@@ -5,36 +5,34 @@ const campaignsSchema = new mongoose.Schema({
     campaign_name: { 
         type: String, 
         required: true, 
-        unique: true
+        unique: true,
+        trim: true
      },
 
     client: { 
         type: String, 
-        required: true 
+        required: true,
+        trim: true
     },
 
     marketUnit: { 
         type: String, 
-        required: true 
+        required: true,
+        trim: true
     },
-    
-    sites: [{ 
-        type: String 
-    }],
 
     language: {
         type: String, 
-        required: true 
+        required: true,
+        trim: true
     },
 
     productive_hours_revenue: {
         type: Number, 
-        required: false 
+        required: false,
+        trim: true
     },
 
-    activities_Used:[{ 
-        type: String 
-    }]
 });
 
 module.exports = mongoose.model('campaigns', campaignsSchema);

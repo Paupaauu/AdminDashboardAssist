@@ -6,6 +6,8 @@ ipcRenderer.on('load-campaign-data', (event, campaignData) => {
     document.getElementById("txtEditClient").value = campaignData.client;
     document.getElementById("txtEditMarketUnit").value = campaignData.marketUnit;
     document.getElementById("txtEditLanguage").value = campaignData.language;
+    document.getElementById("txtNewProductive_hours_revenue").value = campaignData.productive_hours_revenue;
+
 });
 
 // Guardar los cambios realizados
@@ -14,16 +16,18 @@ document.getElementById("btnSaveCampaign").addEventListener('click', () => {
         campaign_name: document.getElementById("txtEditCampaign").value,
         client: document.getElementById("txtEditClient").value,
         marketUnit: document.getElementById("txtEditMarketUnit").value,
-        language: document.getElementById("txtEditLanguage").value
+        language: document.getElementById("txtEditLanguage").value,
+        productive_hours_revenue: document.getElementById("txtNewProductive_hours_revenue").value
     };
 
     // Validar que los campos no estén vacíos
-    if (!updatedCampaign.campaign_name || !updatedCampaign.client || !updatedCampaign.marketUnit || !updatedCampaign.language) {
+    if (!updatedCampaign.campaign_name || !updatedCampaign.client || !updatedCampaign.marketUnit || !updatedCampaign.language || !updatedCampaign.productive_hours_revenue) {
         alert("Debe completar todos los campos");
         return;
     }
 
     ipcRenderer.send('update-campaign', updatedCampaign);
+
 });
 
 ipcRenderer.on('update-campaign-success', () => {

@@ -6,10 +6,26 @@ const clientsSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        trim: true
+
     },
-    client_shortname: {
+    email_manager_in_charge: {
         type: String,
         required: true,
+        trim: true
+    },
+
+    description: {
+        type: String, 
+        required: false, 
+        trim: true
+
+    },
+    image: {
+        type: String, // URL de la imagen
+        required: false, 
+        trim: true
+
     },
 });
 

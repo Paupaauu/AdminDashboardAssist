@@ -60,6 +60,7 @@ if (process.env.NODE_ENV !== 'production') {
     })
 }
 
+//-------------------CAMPAÑAS--------------------//
 /*----Lógica para Crear Campaña--------------------------------------------------------------------*/
 ipcMain.on('open-new-campaign-window', () => {
     if (newCampaignWindow) {
@@ -70,7 +71,7 @@ ipcMain.on('open-new-campaign-window', () => {
     // Creamos la ventana de nueva campaña
     newCampaignWindow = new BrowserWindow({
         width: 575,
-        height: 600,
+        height: 700,
         parent: mainWindow,
         modal: true,
         webPreferences: {
@@ -159,7 +160,7 @@ ipcMain.on('open-edit-campaign-window', async (event, campaignName) => {
 
     editCampaignWindow = new BrowserWindow({
         width: 575,
-        height: 600,
+        height: 700,
         parent: mainWindow,
         modal: true,
         webPreferences: {
@@ -199,3 +200,5 @@ ipcMain.on('update-campaign', async (event, updatedCampaign) => {
         event.sender.send('update-campaign-error', error.message);
     }
 });
+
+//-------------------CLIENTES--------------------//

@@ -6,6 +6,7 @@ document.getElementById("btnNewCampaign").addEventListener('click', () => {
     let txtNewClient = document.getElementById("txtNewClient").value;
     let txtNewMarketUnit = document.getElementById("txtNewMarketUnit").value;
     let txtNewLanguage = document.getElementById("txtNewLanguage").value;
+    let txtNewProductive_hours_revenue = document.getElementById("txtNewProductive_hours_revenue").value;
 //Validamos que los campos no estén vacíos
     if (txtNewCampaign === "" || txtNewClient === "" || txtNewMarketUnit === "" || txtNewLanguage === "") {
         alert("Debe completar todos los campos");
@@ -14,7 +15,8 @@ document.getElementById("btnNewCampaign").addEventListener('click', () => {
             campaign_name: txtNewCampaign,
             client: txtNewClient,
             marketUnit: txtNewMarketUnit,
-            language: txtNewLanguage
+            language: txtNewLanguage,
+            productive_hours_revenue:txtNewProductive_hours_revenue
         });
     }
 });

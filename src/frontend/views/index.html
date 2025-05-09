@@ -16,20 +16,20 @@
 <body>
   <div class="container-fluid vh-100">
     <div class="row h-100">
-      <!-- Barra superior con botón toggler sólo en sm -->
-      <header class="d-md-none bg-dark text-white w-100 py-2 px-3">
+      <!-- Menu colapsado para pantallas pequeñas sm -->
+      <header class="d-md-none bg-dark text-white w-100 py-2 px-3"> <!-- "d-md-non" oculta el header para pantallas de tamaño mediado o superior-->
         <button class="btn btn-outline-light" type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#sidebarMenu"
                 aria-controls="sidebarMenu"
                 aria-expanded="false"
                 aria-label="Toggle navigation">
-          <i class="bi bi-list"></i>
+          <i class="bi bi-list"></i> <!-- icono de liasta -->
         </button>
         <span class="ms-2 h5 mb-0">Assist Digital</span>
       </header>
 
-      <!-- SIDEBAR -->
+      <!-- Menu lateral en pantallas medianas o grandes -->
       <nav id="sidebarMenu" class="collapse d-md-block col-12 col-md-2 bg-dark text-white sidebar">
         <div class="position-sticky pt-3">
           <a href="#" class="d-flex align-items-center mb-3 text-white text-decoration-none">

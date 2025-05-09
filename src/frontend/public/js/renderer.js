@@ -52,7 +52,7 @@ async function renderCampaigns(content) {
           <th>Cliente</th>
           <th>Unidad de Mercado</th>
           <th>Idioma</th>
-          <th>Horas Productivas</th>
+          <th>Precio hora</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -84,7 +84,7 @@ async function renderCampaigns(content) {
           <td>${campaign.client}</td>
           <td>${campaign.marketUnit}</td>
           <td>${campaign.language}</td>
-          <td>${campaign.productive_hours_revenue || 'N/A'}</td>
+          <td>${campaign.productive_hours_revenue}</td>
           <td>
             <button class="btn btn-sm btn-primary btnEditCampaign" data-name="${campaign.campaign_name}">Editar</button>
             <button class="btn btn-sm btn-danger btnDeleteCampaign" data-name="${campaign.campaign_name}">Eliminar</button>
@@ -132,3 +132,4 @@ editButtons.forEach(button => {
 
 }
 
+//--------------------CLIENTES--------------------//
