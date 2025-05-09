@@ -22,7 +22,7 @@ function createWindow() {
     mainWindow.setMenu(null);
     // Carga el archivo HTML en la ventana
     mainWindow.loadFile("./src/frontend/views/index.html");
-    mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
+    //mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 }
 
 //Codigo para lanzar la pagina principal y para cerrar app cuando se cierre la ventana
@@ -118,5 +118,84 @@ ipcMain.handle('get-campaigns', async () => {
     } catch (error) {
         console.error('Error al obtener campañas:', error);
         throw error;
+    }
+});
+
+//-------Lógica para eliminar Campaña--------------------------------------------------------------------------------------------------
+ipcMain.handle('delete-campaign', async (event, campaignName) => {
+    try {
+        console.log('Nombre de la campaña a eliminar:', campaignName); // Depuración
+        const result = await Campaign.findOneAndDelete({ campaign_name: campaignName }); // Eliminar la campaña por nombre
+        if (result) {
+            console.log(`Campaña eliminada con éxito: ${campaignName}`);
+        } else {
+            console.log(`No se encontró ninguna campaña con el nombre: ${campaignName}`);
+            throw new Error('No se encontró ninguna campaña con ese nombre.');
+        }
+    } catch (error) {
+        console.error('Error al eliminar la campaña:', error);
+        throw error; // Lanzar error para que el renderer lo maneje
+    }
+});
+
+//-------Lógica para editar Campaña--------------------------------------------------------------------------------------------------
+
+let editCampaignWindow = null; // Ventana de edición
+
+// Abrimos ventana de edición
+ipcMain.on('open-edit-campaign-window', async (event, campaignName) => {
+    if (editCampaignWindow) {
+        editCampaignWindow.focus();
+        return;
+    }
+
+    // Obtener los datos de la campaña
+    const campaignData = await Campaign.findOne({ campaign_name: campaignName }).lean();
+
+    if (!campaignData) {
+        event.sender.send('edit-campaign-error', 'No se encontró la campaña.');
+        return;
+    }
+
+    editCampaignWindow = new BrowserWindow({
+        width: 575,
+        height: 600,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    editCampaignWindow.setMenu(null);
+    editCampaignWindow.loadFile('./src/frontend/views/editCampaign.html');
+
+    editCampaignWindow.on('closed', () => {
+        editCampaignWindow = null;
+    });
+
+    editCampaignWindow.webContents.on('did-finish-load', () => {
+        editCampaignWindow.webContents.send('load-campaign-data', campaignData);
+    });
+});
+
+// Actualizar campaña en la base de datos
+ipcMain.on('update-campaign', async (event, updatedCampaign) => {
+    try {
+        const result = await Campaign.findOneAndUpdate(
+            { campaign_name: updatedCampaign.campaign_name }, // Filtro por nombre único
+            updatedCampaign, // Datos actualizados
+            { new: true } // Retornar el documento actualizado
+        );
+
+        if (result) {
+            event.sender.send('update-campaign-success');
+        } else {
+            throw new Error('No se encontró la campaña para actualizar.');
+        }
+    } catch (error) {
+        console.error('Error al actualizar la campaña:', error);
+        event.sender.send('update-campaign-error', error.message);
     }
 });

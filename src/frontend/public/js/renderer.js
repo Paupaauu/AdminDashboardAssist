@@ -3,13 +3,13 @@ const { ipcRenderer } = require('electron');
 
 // Inicializar la vista principal al cargar la aplicación
 window.onload = () => {
-  loadView('main'); 
+  loadView('main');
 };
 
 // Función para cargar contenido dinámico
 function loadView(view) {
   const links = document.querySelectorAll('.nav-link');
-  links.forEach(link => link.classList.remove('active')); 
+  links.forEach(link => link.classList.remove('active'));
 
   const selectedLink = document.getElementById(view);
   if (selectedLink) {
@@ -20,7 +20,7 @@ function loadView(view) {
   const content = document.getElementById('content');
   content.innerHTML = ''; // Limpia el contenido actual
 
-  switch(view) {
+  switch (view) {
     case 'main':
       content.innerHTML = `<h1>Bienvenido a la página principal</h1>`;
       break;
@@ -86,12 +86,32 @@ async function renderCampaigns(content) {
           <td>${campaign.language}</td>
           <td>${campaign.productive_hours_revenue || 'N/A'}</td>
           <td>
-            <button class="btn btn-sm btn-primary">Editar</button>
-            <button class="btn btn-sm btn-danger">Eliminar</button>
+            <button class="btn btn-sm btn-primary btnEditCampaign" data-name="${campaign.campaign_name}">Editar</button>
+            <button class="btn btn-sm btn-danger btnDeleteCampaign" data-name="${campaign.campaign_name}">Eliminar</button>
           </td>
         `;
         tableBody.appendChild(row);
       });
+
+      // Agregamos evento al boton "Eliminar"
+      const deleteButtons = document.querySelectorAll('.btnDeleteCampaign');
+deleteButtons.forEach(button => {
+  button.addEventListener('click', async (event) => {
+    const campaignName = event.currentTarget.getAttribute('data-name'); // Obtener el nombre de la campaña
+    console.log('Nombre de la campaña a eliminar:', campaignName); // Depuración
+    const confirmDelete = confirm('¿Estás seguro de que deseas eliminar esta campaña?');
+    if (confirmDelete) {
+      try {
+        await ipcRenderer.invoke('delete-campaign', campaignName);
+        alert('Campaña eliminada con éxito.');
+        renderCampaigns(content); // Recargar campañas
+      } catch (error) {
+        console.error('Error al eliminar campaña:', error);
+        alert('Error al eliminar la campaña. Consulta la consola para más detalles.');
+      }
+    }
+  });
+});
     } else {
       tableBody.innerHTML = `<tr><td colspan="7">No hay campañas disponibles.</td></tr>`;
     }
@@ -100,6 +120,15 @@ async function renderCampaigns(content) {
     const tableBody = document.getElementById('campaignsTableBody');
     tableBody.innerHTML = `<tr><td colspan="7">Error al cargar campañas.</td></tr>`;
   }
-}
 
+  // Agregamos evento al botón "Editar"
+const editButtons = document.querySelectorAll('.btnEditCampaign');
+editButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const campaignName = button.getAttribute('data-name'); // Obtener el nombre de la campaña
+        ipcRenderer.send('open-edit-campaign-window', campaignName);
+    });
+});
+
+}
 
