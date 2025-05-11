@@ -65,9 +65,6 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 
-
-
-
 //-------------------CAMPAÑAS--------------------//
 /*----Lógica para Crear Campaña--------------------------------------------------------------------*/
 ipcMain.on('open-new-campaign-window', () => {
@@ -466,14 +463,16 @@ ipcMain.on('add-site', async (event, siteData) => {
     }
 });
 
-//-------Lógica para mostrar Sites--------------------------------------------------------------------------------------------------
+
+
+//-------Lógica para mostrar todos los Sites (para el apartado sitios)------------------------------------------------------
 ipcMain.handle('get-sites', async () => {
     try {
-        const sites = await Site.find().lean(); // Obtenemos todos los sites de la base de datos
-        return sites; // Devolvemos los sites al renderer.js
+        const sites = await Site.find().lean(); // Obtener todos los sitios
+        return sites; // Devolver los sitios al renderer.js
     } catch (error) {
-        console.error('Error al obtener sites:', error);
-        throw error;
+        console.error('Error al obtener sitios:', error);
+        throw error; 
     }
 });
 
@@ -592,6 +591,8 @@ ipcMain.on('open-new-worker-window', () => {
     });
     newWorkerWindow.setMenu(null);
     newWorkerWindow.loadFile('./src/frontend/views/newWorker.html');
+    newWorkerWindow.webContents.openDevTools();
+
 
     newWorkerWindow.on('closed', () => {
         newWorkerWindow = null;
@@ -606,22 +607,42 @@ ipcMain.on('close-new-worker-window', () => {
 
     // Actualiza la vista de trabajadores
     mainWindow.webContents.send('refresh-workers');
+
 });
 
 // Recibimos los datos del nuevo trabajador y los guardamos en la base de datos
-ipcMain.on('add-worker', async (event, workerData) => {
+ipcMain.on("add-worker", async (event, workerData) => {
     try {
-        const newWorker = new Worker(workerData);
-        await newWorker.save();
-        event.sender.send('add-worker-success');
-        mainWindow.webContents.send('refresh-workers'); // Recargar la vista
-    } catch (error) {
-        console.error('Error al guardar trabajador:', error);
-        if (error.code === 11000) {
-            event.sender.send('add-worker-error', 'El ID del trabajador ya existe.');
-        } else {
-            event.sender.send('add-worker-error', error.message);
+        // Validar que el sitio exista en la base de datos
+        const siteExists = await Site.findOne({ site_name: workerData.site }); // workerData.site proviene del frontend
+        if (!siteExists) {
+            throw new Error("El sitio seleccionado no existe.");
         }
+
+        // Guardar los datos del trabajador
+        const newWorker = new Worker(workerData); 
+        await newWorker.save();
+        event.sender.send("add-worker-success");
+        mainWindow.webContents.send("refresh-workers"); // Recargar la vista de trabajadores
+    } catch (error) {
+        console.error("Error al guardar trabajador:", error);
+        if (error.code === 11000) {
+            event.sender.send("add-worker-error", "El ID del trabajador ya existe.");
+        } else {
+            event.sender.send("add-worker-error", error.message);
+        }
+    }
+});
+
+//-------Lógica para mostrar Sites en el desplegable de--------------------------------------------------------------------------------------------------
+ipcMain.handle('get-sites-list', async () => {
+    try {
+        console.log('get-sites-list invocado'); // Depuración
+        const sites = await Site.find({}, { site_name: 1, _id: 0 }).lean(); // Usar .lean() para obtener objetos planos, sino me daba error
+        return sites;
+    } catch (error) {
+        console.error('Error al obtener la lista de sitios:', error);
+        throw error;
     }
 });
 
@@ -715,4 +736,32 @@ ipcMain.on('close-edit-worker-window', () => {
 
     // Actualiza la vista de trabajadores
     mainWindow.webContents.send('refresh-workers');
+});
+
+
+//-------------------MAIN--------------------//
+
+ipcMain.handle('get-kpi-data', async () => {
+    try {
+        const totalSites = await Site.countDocuments(); // Total de sitios
+        const totalClients = await Client.countDocuments(); // Total de clientes
+
+        // Agentes por sitio y horas trabajadas por sitio
+        const workers = await Worker.aggregate([
+            { $group: { 
+                _id: "$site", 
+                totalAgents: { $sum: 1 }, 
+                totalHoursWorked: { $sum: "$hours_worked" }
+            }}
+        ]);
+
+        return {
+            totalSites,
+            totalClients,
+            workers
+        };
+    } catch (error) {
+        console.error('Error al obtener datos de KPI:', error);
+        throw error;
+    }
 });

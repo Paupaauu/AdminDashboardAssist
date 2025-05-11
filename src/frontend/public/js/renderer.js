@@ -22,7 +22,7 @@ function loadView(view) {
 
   switch (view) {
     case 'main':
-      content.innerHTML = `<h1>Bienvenido a la página principal</h1>`;
+      renderMain(content);
       break;
     case 'workers':
       renderWorkers(content);
@@ -416,3 +416,73 @@ ipcRenderer.on('refresh-workers', () => {
   const content = document.getElementById('content');
   renderWorkers(content); // Recargar la tabla de trabajadores
 });
+
+//--------------------MAIN--------------------//
+async function renderMain(content) {
+  content.innerHTML = `
+      <h1>Resumen de KPI</h1>
+      <div class="row">
+          <div class="col-md-6">
+              <div class="card shadow-sm">
+                  <div class="card-body">
+                      <h5 class="card-title">Total de Sitios</h5>
+                      <p id="totalSites" class="card-text display-4">0</p>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-6">
+              <div class="card shadow-sm">
+                  <div class="card-body">
+                      <h5 class="card-title">Total de Clientes</h5>
+                      <p id="totalClients" class="card-text display-4">0</p>
+                  </div>
+              </div>
+          </div>
+      </div>
+
+      <h2 class="mt-5">Detalle por Sitio</h2>
+      <table class="table table-striped mt-3">
+          <thead>
+              <tr>
+                  <th>Sitio</th>
+                  <th>Total de Agentes</th>
+                  <th>Total de Horas Trabajadas</th>
+              </tr>
+          </thead>
+          <tbody id="siteDetails">
+              <tr><td colspan="3">Cargando datos...</td></tr>
+          </tbody>
+      </table>
+  `;
+
+  // Solicitar datos de KPI al backend
+  try {
+      const kpiData = await ipcRenderer.invoke('get-kpi-data');
+
+      // Mostrar el total de sitios y clientes
+      document.getElementById('totalSites').textContent = kpiData.totalSites;
+      document.getElementById('totalClients').textContent = kpiData.totalClients;
+
+      // Mostrar el detalle por sitio
+      const siteDetails = document.getElementById('siteDetails');
+      siteDetails.innerHTML = ''; // Limpiar contenido actual
+
+      if (kpiData.workers.length > 0) {
+          kpiData.workers.forEach(worker => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                  <td>${worker._id}</td>
+                  <td>${worker.totalAgents}</td>
+                  <td>${worker.totalHoursWorked}</td>
+              `;
+              siteDetails.appendChild(row);
+          });
+      } else {
+          siteDetails.innerHTML = `<tr><td colspan="3">No hay datos disponibles.</td></tr>`;
+      }
+  } catch (error) {
+      console.error('Error al cargar datos de KPI:', error);
+      const siteDetails = document.getElementById('siteDetails');
+      siteDetails.innerHTML = `<tr><td colspan="3">Error al cargar datos.</td></tr>`;
+  }
+}
