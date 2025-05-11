@@ -31,7 +31,7 @@ function loadView(view) {
       renderCampaigns(content);
       break;
     case 'clients':
-      content.innerHTML = `<h1>Gestión de clientes</h1>`;
+      renderClients(content);
       break;
     default:
       content.innerHTML = `<h1>Vista no encontrada</h1>`;
@@ -95,23 +95,23 @@ async function renderCampaigns(content) {
 
       // Agregamos evento al boton "Eliminar"
       const deleteButtons = document.querySelectorAll('.btnDeleteCampaign');
-deleteButtons.forEach(button => {
-  button.addEventListener('click', async (event) => {
-    const campaignName = event.currentTarget.getAttribute('data-name'); // Obtener el nombre de la campaña
-    console.log('Nombre de la campaña a eliminar:', campaignName); // Depuración
-    const confirmDelete = confirm('¿Estás seguro de que deseas eliminar esta campaña?');
-    if (confirmDelete) {
-      try {
-        await ipcRenderer.invoke('delete-campaign', campaignName);
-        alert('Campaña eliminada con éxito.');
-        renderCampaigns(content); // Recargar campañas
-      } catch (error) {
-        console.error('Error al eliminar campaña:', error);
-        alert('Error al eliminar la campaña. Consulta la consola para más detalles.');
-      }
-    }
-  });
-});
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', async (event) => {
+          const campaignName = event.currentTarget.getAttribute('data-name'); // Obtener el nombre de la campaña
+          console.log('Nombre de la campaña a eliminar:', campaignName); // Depuración
+          const confirmDelete = confirm('¿Estás seguro de que deseas eliminar esta campaña?');
+          if (confirmDelete) {
+            try {
+              await ipcRenderer.invoke('delete-campaign', campaignName);
+              alert('Campaña eliminada con éxito.');
+              renderCampaigns(content); // Recargar campañas
+            } catch (error) {
+              console.error('Error al eliminar campaña:', error);
+              alert('Error al eliminar la campaña. Consulta la consola para más detalles.');
+            }
+          }
+        });
+      });
     } else {
       tableBody.innerHTML = `<tr><td colspan="7">No hay campañas disponibles.</td></tr>`;
     }
@@ -122,14 +122,117 @@ deleteButtons.forEach(button => {
   }
 
   // Agregamos evento al botón "Editar"
-const editButtons = document.querySelectorAll('.btnEditCampaign');
-editButtons.forEach(button => {
+  const editButtons = document.querySelectorAll('.btnEditCampaign');
+  editButtons.forEach(button => {
     button.addEventListener('click', () => {
-        const campaignName = button.getAttribute('data-name'); // Obtener el nombre de la campaña
-        ipcRenderer.send('open-edit-campaign-window', campaignName);
+      const campaignName = button.getAttribute('data-name'); // Obtener el nombre de la campaña
+      ipcRenderer.send('open-edit-campaign-window', campaignName);
     });
-});
+  });
+
+  // Escuchar el evento para refrescar la tabla de campañas
+  ipcRenderer.on('refresh-campaigns', () => {
+    const content = document.getElementById('content');
+    renderCampaigns(content); // Recargar la tabla de campañas
+  });
 
 }
 
 //--------------------CLIENTES--------------------//
+
+// Escuchar el evento para refrescar la tabla de clientes
+ipcRenderer.on('refresh-clients', () => {
+  const content = document.getElementById('content');
+  renderClients(content); // Recargar la tabla de clientes
+});
+
+// Función para renderizar la vista de clientes
+async function renderClients(content) {
+  content.innerHTML = `
+    <h1>Clientes existentes</h1>
+    <button id="btnOpenNewClient" class="btn btn-primary mb-3">Nuevo cliente</button>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre</th>
+          <th>Email Responsable</th>
+          <th>Descripción</th>
+          <th>Img</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="clientsTableBody">
+        <tr><td colspan="7">Cargando clientes...</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  // Botón para abrir la ventana de nuevo cliente
+  const btnOpenNewClient = document.getElementById("btnOpenNewClient");
+  btnOpenNewClient.addEventListener('click', () => {
+    ipcRenderer.send('open-new-client-window');
+  });
+
+  // Solicitar clientes al backend
+  try {
+    const clients = await ipcRenderer.invoke('get-clients');
+    const tableBody = document.getElementById('clientsTableBody');
+    tableBody.innerHTML = ''; // Limpia el contenido actual
+
+    // Rellenar la tabla con los
+    if (clients.length > 0) {
+      clients.forEach((clients, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${clients.client_name}</td>
+          <td>${clients.email_manager_in_charge}</td>
+          <td>${clients.description}</td>
+          <td>${clients.image}</td>
+          <td>
+            <button class="btn btn-sm btn-primary btnEditClient" data-name="${clients.client_name}">Editar</button>
+            <button class="btn btn-sm btn-danger btnDeleteClient" data-name="${clients.client_name}">Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Agregamos evento al boton "Eliminar"
+      const deleteButtons = document.querySelectorAll('.btnDeleteClient');
+      deleteButtons.forEach(button => {
+        button.addEventListener('click', async (event) => {
+          const clientName = event.currentTarget.getAttribute('data-name'); // Obtener el nombre del cliente
+          console.log('Nombre del cliente a eliminar:', clientName); // Depuración
+          const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este cliente?');
+          if (confirmDelete) {
+            try {
+              await ipcRenderer.invoke('delete-client', clientName);
+              alert('Cliente eliminado con éxito.');
+            } catch (error) {
+              console.error('Error al eliminar cliente:', error);
+              alert('Error al eliminar el cliente. Consulta la consola para más detalles.');
+            }
+          }
+        });
+      });
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="7">No hay clientes disponibles.</td></tr>`;
+    }
+  } catch (error) {
+    console.error('Error al obtener clientes:', error);
+    const tableBody = document.getElementById('clientsTableBody');
+    tableBody.innerHTML = `<tr><td colspan="7">Error al cargar clientes.</td></tr>`;
+  }
+
+  // Agregamos evento al botón "Editar"
+  const editButtons = document.querySelectorAll('.btnEditClient');
+  editButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const clientName = button.getAttribute('data-name'); // Obtener el nombre del cliente
+      ipcRenderer.send('open-edit-client-window', clientName);
+    });
+  });
+
+}
+

@@ -16,7 +16,7 @@ document.getElementById("btnNewCampaign").addEventListener('click', () => {
             client: txtNewClient,
             marketUnit: txtNewMarketUnit,
             language: txtNewLanguage,
-            productive_hours_revenue:txtNewProductive_hours_revenue
+            productive_hours_revenue: txtNewProductive_hours_revenue
         });
     }
 });
