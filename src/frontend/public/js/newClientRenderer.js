@@ -19,6 +19,15 @@ document.getElementById("btnNewClient").addEventListener('click', () => {
     }
 });
 
+// Listener para abrir el cuadro de diálogo de selección de imagen
+document.getElementById("btnSelectImage").addEventListener('click', async () => {
+    const imagePath = await ipcRenderer.invoke('select-image');
+    if (imagePath) {
+        document.getElementById("txtNewImage").value = imagePath; // Establece la ruta en el campo de texto
+    }
+});
+
+
 ipcRenderer.on('add-client-success', () => {
     alert("Cliente creado correctamente");
     ipcRenderer.send('close-new-client-window');

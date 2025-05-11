@@ -9,6 +9,14 @@ ipcRenderer.on('load-client-data', (event, clientData) => {
 
 });
 
+// Listener para abrir el cuadro de diálogo de selección de imagen
+document.getElementById("btnSelectEditImage").addEventListener('click', async () => {
+    const imagePath = await ipcRenderer.invoke('select-image');
+    if (imagePath) {
+        document.getElementById("txtEditImage").value = imagePath; // Establece la ruta en el campo de texto
+    }
+});
+
 // Guardar los cambios realizados
 document.getElementById("btnSaveClient").addEventListener('click', () => {
     const updatedClient = {

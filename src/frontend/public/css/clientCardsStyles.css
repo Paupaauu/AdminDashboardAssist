@@ -1,0 +1,19 @@
+.card-img-top {
+    width: 100%; /* La imagen se ajustará al ancho de la tarjeta */
+    height: 150px; /* Altura fija */
+    object-fit: cover; /* Recorta o escala la imagen para que encaje */
+    object-position: center; /* Centra la imagen recortada */
+}
+
+.card-text {
+    height: 100px; /* Altura fija para la descripción */
+    overflow-y: auto; /* Añade scroll vertical si el texto es más largo */
+    word-wrap: break-word; /* Asegura que las palabras largas se ajusten */
+    font-size: 0.9rem; /* Tamaño más pequeño para el texto del email */
+
+}
+
+.card .card-text.email {
+    height: 25px;
+    font-size: 0.85rem; /* Tamaño más pequeño para el texto del email */
+}

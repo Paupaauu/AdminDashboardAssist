@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const connectDB = require("./src/backend/config/db");
+const path = require("path");
+const fs = require("fs");
 const Campaign = require("./src/backend/models/campaigns"); // Importamos el modelo campaigns
 const Client = require('./src/backend/models/clients'); // Importamos el modelo clients
 const Site = require('./src/backend/models/sites'); // Importar el modelo sites
@@ -253,10 +255,34 @@ ipcMain.on('close-new-client-window', () => {
     // Actualiza la vista de clientes
     mainWindow.webContents.send('refresh-clients');
 });
+/*----Cuadr de dialogo para seleccionar imagen--------------------------------------------------------------------*/
+ipcMain.handle('select-image', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        properties: ['openFile'],
+        filters: [
+            { name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }
+        ]
+    });
+    if (canceled) {
+        return null; // El usuario canceló la selección
+    } else {
+        return filePaths[0]; // Retorna la ruta del archivo seleccionado
+    }
+});
 
 //Recibimos los datos de nuevo cliente desde el renderer.js y los guardamos en la base de datos y enviamos un mensaje de éxito o error al renderer.js
 ipcMain.on('add-client', async (event, clientData) => {
     try {
+        let imagePath = clientData.image;
+
+        // Copiar la imagen seleccionada a la carpeta de destino
+        if (imagePath) {
+            const fileName = path.basename(imagePath);
+            const destPath = path.join(__dirname, 'src', 'frontend', 'public', 'img', fileName);
+            fs.copyFileSync(imagePath, destPath);
+            clientData.image = `img/${fileName}`; // Actualiza la ruta de la imagen en los datos del cliente
+        }
+
         const newClient = new Client(clientData); 
         await newClient.save(); // Guarda el cliente en la base de datos
         event.sender.send('add-client-success');
@@ -342,6 +368,20 @@ ipcMain.on('open-edit-client-window', async (event, clientName) => {
 // Actualizar clientes en la base de datos
 ipcMain.on('update-client', async (event, updatedClient) => {
     try {
+        let imagePath = updatedClient.image;
+
+        // Sobrescribir la imagen si se selecciona una nueva
+        if (imagePath && fs.existsSync(imagePath)) {
+            const fileName = `${updatedClient.client_name}${path.extname(imagePath)}`;
+            const destPath = path.join(__dirname, 'src', 'frontend', 'public', 'img', fileName);
+
+            // Copiar la nueva imagen a la carpeta "public/img"
+            fs.copyFileSync(imagePath, destPath);
+
+            // Actualizar la ruta de la imagen
+            updatedClient.image = `img/${fileName}`;
+        }
+
         const result = await Client.findOneAndUpdate(
             { client_name: updatedClient.client_name }, // Filtro por nombre único
             updatedClient, // Datos actualizados
@@ -352,11 +392,11 @@ ipcMain.on('update-client', async (event, updatedClient) => {
             event.sender.send('update-client-success');
             mainWindow.webContents.send('refresh-clients'); // Actualiza la vista de clientes
         } else {
-            throw new Error('No se puede actualizar el nombre del cliente.');
+            throw new Error('No se pudo actualizar el cliente.');
         }
     } catch (error) {
         console.error('Error al actualizar cliente:', error);
-        event.sender.send('update-cliente-error', error.message);
+        event.sender.send('update-client-error', error.message);
     }
 });
 

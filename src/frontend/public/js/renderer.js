@@ -174,22 +174,21 @@ async function renderClients(content) {
         const card = document.createElement('div');
         card.className = 'col-12 col-sm-6 col-md-4 col-lg-3 mb-4';
         card.innerHTML = `
-          <div class="card shadow-sm">
-            <img src="${client.image}" class="card-img-top" alt="${client.client_name}">
-            <div class="card-body">
-              <h5 class="card-title">${client.client_name}</h5>
-              <p class="card-text"><strong>Email:</strong> ${client.email_manager_in_charge}</p>
-              <p class="card-text">${client.description}</p>
+            <div class="card shadow-sm">
+                <img src="file://${__dirname}/../public/${client.image}" class="card-img-top" alt="${client.client_name}">
+                <div class="card-body">
+                    <h5 class="card-title">${client.client_name}</h5>
+                    <p class="card-text email"> ${client.email_manager_in_charge}</p>
+                    <p class="card-text">${client.description}</p>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <button class="btn btn-primary btnEditClient" data-name="${client.client_name}">Editar</button>
+                    <button class="btn btn-danger btnDeleteClient" data-name="${client.client_name}">Eliminar</button>
+                </div>
             </div>
-            <div class="card-footer d-flex justify-content-between">
-              <button class="btn btn-primary btnEditClient" data-name="${client.client_name}">Editar</button>
-              <button class="btn btn-danger btnDeleteClient" data-name="${client.client_name}">Eliminar</button>
-            </div>
-          </div>
         `;
         container.appendChild(card);
-      });
-
+    });
       // Agregar eventos a los botones
       const deleteButtons = document.querySelectorAll('.btnDeleteClient');
       deleteButtons.forEach(button => {
