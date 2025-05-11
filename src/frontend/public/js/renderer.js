@@ -33,6 +33,9 @@ function loadView(view) {
     case 'clients':
       renderClients(content);
       break;
+    case 'sites': // Añadimos la lógica para renderizar la vista de sites
+      renderSites(content);
+      break;
     default:
       content.innerHTML = `<h1>Vista no encontrada</h1>`;
   }
@@ -221,5 +224,99 @@ async function renderClients(content) {
     console.error('Error al obtener clientes:', error);
     const container = document.getElementById('clientsCardsContainer');
     container.innerHTML = `<p>Error al cargar clientes.</p>`;
+  }
+}
+
+//--------------------SITES--------------------//
+// Escuchar el evento para refrescar la tabla de sitios
+ipcRenderer.on('refresh-sites', () => {
+  const content = document.getElementById('content');
+  renderSites(content); // Recargar la tabla de sitios
+});
+
+// Función para renderizar la vista de sitios
+async function renderSites(content) {
+  content.innerHTML = `
+    <h1>Sitios existentes</h1>
+    <button id="btnOpenNewSite" class="btn btn-primary mb-3">Nuevo sitio</button>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Nombre del Sitio</th>
+          <th>País</th>
+          <th>Dirección</th>
+          <th>Fecha de Apertura</th>
+          <th>Fecha de Cierre</th>
+          <th>Costo por Hora (€)</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="sitesTableBody">
+        <tr><td colspan="8">Cargando sitios...</td></tr>
+      </tbody>
+    </table>
+  `;
+
+  const btnOpenNewSite = document.getElementById("btnOpenNewSite");
+  btnOpenNewSite.addEventListener('click', () => {
+    ipcRenderer.send('open-new-site-window');
+  });
+
+  try {
+    const sites = await ipcRenderer.invoke('get-sites');
+    const tableBody = document.getElementById('sitesTableBody');
+    tableBody.innerHTML = ''; // Limpia el contenido actual
+
+    if (sites.length > 0) {
+      sites.forEach((site, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${site.site_name}</td>
+          <td>${site.country}</td>
+          <td>${site.address}</td>
+          <td>${new Date(site.opened_date).toLocaleDateString()}</td>
+          <td>${site.closed_date ? new Date(site.closed_date).toLocaleDateString() : 'N/A'}</td>
+          <td>€${site.cost_per_hour}</td>
+          <td>
+            <button class="btn btn-sm btn-primary btnEditSite me-2" data-name="${site.site_name}">Editar</button>
+            <button class="btn btn-sm btn-danger btnDeleteSite" data-name="${site.site_name}">Eliminar</button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+
+      // Agregar eventos a los botones
+      document.querySelectorAll('.btnDeleteSite').forEach(button => {
+        button.addEventListener('click', async (event) => {
+          const siteName = event.currentTarget.getAttribute('data-name');
+          const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este sitio?');
+          if (confirmDelete) {
+            try {
+              await ipcRenderer.invoke('delete-site', siteName);
+              alert('Sitio eliminado con éxito.');
+              renderSites(content); // Recargar sitios
+            } catch (error) {
+              console.error('Error al eliminar sitio:', error);
+              alert('Error al eliminar el sitio.');
+            }
+          }
+        });
+      });
+
+      document.querySelectorAll('.btnEditSite').forEach(button => {
+        button.addEventListener('click', () => {
+          const siteName = button.getAttribute('data-name');
+          ipcRenderer.send('open-edit-site-window', siteName);
+        });
+      });
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="8">No hay sitios disponibles.</td></tr>`;
+    }
+  } catch (error) {
+    console.error('Error al obtener sitios:', error);
+    const tableBody = document.getElementById('sitesTableBody');
+    tableBody.innerHTML = `<tr><td colspan="8">Error al cargar sitios.</td></tr>`;
   }
 }

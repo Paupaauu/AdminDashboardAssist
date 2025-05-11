@@ -9,7 +9,7 @@ const Activities = require('./src/backend/models/activities'); // Importar el mo
 let mainWindow; // Variable global para la ventana principal
 let newCampaignWindow = null; // Variable global para la ventana de crear nueva campaña
 let newClientWindow = null; // Variable global para la ventana de crear nueva campaña
-
+let newSiteWindow = null; // Variable global para la ventana de crear nuevo sitio
 
 // Función que crea la ventana principal
 function createWindow() {
@@ -411,7 +411,158 @@ ipcMain.on('close-edit-client-window', () => {
     mainWindow.webContents.send('refresh-clients');
 });
 
+//-------------------SITES--------------------//
+/*----Lógica para Crear Site--------------------------------------------------------------------*/
+ipcMain.on('open-new-site-window', () => {
+    if (newSiteWindow) {
+        newSiteWindow.focus();
+        return;
+    }
 
+    // Creamos la ventana de nuevo site
+    newSiteWindow = new BrowserWindow({
+        width: 575,
+        height: 700,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    newSiteWindow.setMenu(null);
+    newSiteWindow.loadFile('./src/frontend/views/newSite.html');
+    // newSiteWindow.webContents.openDevTools();
+
+    newSiteWindow.on('closed', () => {
+        newSiteWindow = null;
+    });
+});
+
+ipcMain.on('close-new-site-window', () => {
+    if (newSiteWindow) {
+        newSiteWindow.close();
+        newSiteWindow = null;
+    }
+
+    // Actualiza la vista de sites
+    mainWindow.webContents.send('refresh-sites');
+});
+
+// Recibimos los datos del nuevo site desde el renderer.js y los guardamos en la base de datos
+ipcMain.on('add-site', async (event, siteData) => {
+    try {
+        const newSite = new Site(siteData);
+        await newSite.save();
+        event.sender.send('add-site-success');
+        mainWindow.webContents.send('refresh-sites'); // Emitir evento para recargar la vista de sitios
+    } catch (error) {
+        console.error('Error al guardar site:', error);
+        event.sender.send('add-site-error', error.message);
+    }
+});
+
+//-------Lógica para mostrar Sites--------------------------------------------------------------------------------------------------
+ipcMain.handle('get-sites', async () => {
+    try {
+        const sites = await Site.find().lean(); // Obtenemos todos los sites de la base de datos
+        return sites; // Devolvemos los sites al renderer.js
+    } catch (error) {
+        console.error('Error al obtener sites:', error);
+        throw error;
+    }
+});
+
+//-------Lógica para eliminar Site--------------------------------------------------------------------------------------------------
+ipcMain.handle('delete-site', async (event, siteName) => {
+    try {
+        console.log('Nombre del site a eliminar:', siteName); // Depuración
+        const result = await Site.findOneAndDelete({ site_name: siteName }); // Eliminar el site por nombre
+        if (result) {
+            console.log(`Site eliminado con éxito: ${siteName}`);
+        } else {
+            console.log(`No se encontró ningún site con el nombre: ${siteName}`);
+            throw new Error('No se encontró ningún site con ese nombre.');
+        }
+    } catch (error) {
+        console.error('Error al eliminar el site:', error);
+        throw error;
+    }
+});
+
+//-------Lógica para editar Site--------------------------------------------------------------------------------------------------
+
+let editSiteWindow = null; // Ventana de edición
+
+// Abrimos ventana de edición
+ipcMain.on('open-edit-site-window', async (event, siteName) => {
+    if (editSiteWindow) {
+        editSiteWindow.focus();
+        return;
+    }
+
+    // Obtener los datos del sitio desde la base de datos
+    const siteData = await Site.findOne({ site_name: siteName }).lean();
+
+    if (!siteData) {
+        event.sender.send('edit-site-error', 'No se encontró el sitio.');
+        return;
+    }
+
+    // Crear la ventana de edición
+    editSiteWindow = new BrowserWindow({
+        width: 575,
+        height: 700,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    editSiteWindow.setMenu(null);
+    editSiteWindow.loadFile('./src/frontend/views/editSite.html');
+
+    // Enviar los datos del sitio al frontend después de que la ventana cargue
+    editSiteWindow.webContents.on('did-finish-load', () => {
+        editSiteWindow.webContents.send('load-site-data', siteData);
+    });
+
+    editSiteWindow.on('closed', () => {
+        editSiteWindow = null;
+    });
+});
+
+// Actualizar site en la base de datos
+ipcMain.on('update-site', async (event, updatedSite) => {
+    try {
+        const result = await Site.findOneAndUpdate(
+            { site_name: updatedSite.site_name }, // Filtro por nombre único
+            updatedSite, // Datos actualizados
+            { new: true } // Retornar el documento actualizado
+        );
+
+        if (result) {
+            event.sender.send('update-site-success');
+        } else {
+            throw new Error('No se encontró el site para actualizar.');
+        }
+    } catch (error) {
+        console.error('Error al actualizar el site:', error);
+        event.sender.send('update-site-error', error.message);
+    }
+});
+
+ipcMain.on('close-edit-site-window', () => {
+    if (editSiteWindow) {
+        editSiteWindow.close();
+        editSiteWindow = null;
+    }
+
+    // Actualiza la vista de sites
+    mainWindow.webContents.send('refresh-sites');
+});
 
 
 

@@ -2,18 +2,31 @@
 const mongoose = require('mongoose');
 
 const siteSchema = new mongoose.Schema({
-  name: { 
+  site_name: { 
     type: String, 
     required: true 
   },
-  location: { 
+  country: { 
     type: String, 
     required: true 
   },
-  description: { 
+  address: { 
     type: String, 
+    required: true 
+  },
+  opened_date: {
+    type: Date, 
+    required: true 
+  },
+  closed_date: { 
+    type: Date, 
     required: false 
-  }
+  },
+  cost_per_hour: {
+    type: Number, 
+    required: true 
+  },
+
 });
 
 module.exports = mongoose.model('site', siteSchema);
