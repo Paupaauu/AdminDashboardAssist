@@ -24,8 +24,8 @@ function loadView(view) {
     case 'main':
       content.innerHTML = `<h1>Bienvenido a la página principal</h1>`;
       break;
-    case 'users':
-      content.innerHTML = `<h1>Gestión de usuarios</h1>`;
+    case 'workers':
+      renderWorkers(content);
       break;
     case 'campaigns':
       renderCampaigns(content);
@@ -87,7 +87,7 @@ async function renderCampaigns(content) {
           <td>${campaign.client}</td>
           <td>${campaign.marketUnit}</td>
           <td>${campaign.language}</td>
-          <td>${campaign.productive_hours_revenue}</td>
+          <td>${campaign.productive_hours_revenue.toFixed(2)}€</td>
           <td>
             <button class="btn btn-sm btn-primary btn-sm btnEditCampaign" data-name="${campaign.campaign_name}">Editar</button>
             <button class="btn btn-sm btn-danger btn-sm btnDeleteCampaign" data-name="${campaign.campaign_name}">Eliminar</button>
@@ -278,7 +278,7 @@ async function renderSites(content) {
           <td>${site.address}</td>
           <td>${new Date(site.opened_date).toLocaleDateString()}</td>
           <td>${site.closed_date ? new Date(site.closed_date).toLocaleDateString() : 'N/A'}</td>
-          <td>€${site.cost_per_hour}</td>
+          <td>${site.cost_per_hour.toFixed(2)}€</td>
           <td>
             <button class="btn btn-sm btn-primary btnEditSite me-2" data-name="${site.site_name}">Editar</button>
             <button class="btn btn-sm btn-danger btnDeleteSite" data-name="${site.site_name}">Eliminar</button>
@@ -320,3 +320,99 @@ async function renderSites(content) {
     tableBody.innerHTML = `<tr><td colspan="8">Error al cargar sitios.</td></tr>`;
   }
 }
+
+//--------------------WORKERS--------------------//
+async function renderWorkers(content) {
+  content.innerHTML = `
+      <h1>Trabajadores existentes</h1>
+      <button id="btnOpenNewWorker" class="btn btn-primary mb-3">Nuevo trabajador</button>
+      <table class="table table-striped">
+          <thead>
+              <tr>
+                  <th>#</th>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Primer Apellido</th>
+                  <th>Segundo Apellido</th>
+                  <th>Sitio</th>
+                  <th>Actividad</th>
+                  <th>Campaña</th>
+                  <th>Horas Trabajadas</th>
+                  <th>Acciones</th>
+              </tr>
+          </thead>
+          <tbody id="workersTableBody">
+              <tr><td colspan="9">Cargando trabajadores...</td></tr>
+          </tbody>
+      </table>
+  `;
+
+  const btnOpenNewWorker = document.getElementById("btnOpenNewWorker");
+  btnOpenNewWorker.addEventListener('click', () => {
+      ipcRenderer.send('open-new-worker-window');
+  });
+
+  try {
+      const workers = await ipcRenderer.invoke('get-workers');
+      const tableBody = document.getElementById('workersTableBody');
+      tableBody.innerHTML = ''; // Limpia el contenido actual
+
+      if (workers.length > 0) {
+          workers.forEach((worker, index) => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
+                  <td>${index + 1}</td>
+                  <td>${worker.agent_id}</td>
+                  <td>${worker.agent_name}</td>
+                  <td>${worker.agent_surname1}</td>
+                  <td>${worker.agent_surname2}</td>
+                  <td>${worker.site}</td>
+                  <td>${worker.activity}</td>
+                  <td>${worker.campaign}</td>
+                  <td>${worker.hours_worked}</td>
+                  <td>
+                      <button class="btn btn-sm btn-primary btnEditWorker me-2" data-id="${worker.agent_id}">Editar</button>
+                      <button class="btn btn-sm btn-danger btnDeleteWorker" data-id="${worker.agent_id}">Eliminar</button>
+                  </td>
+              `;
+              tableBody.appendChild(row);
+          });
+
+          document.querySelectorAll('.btnDeleteWorker').forEach(button => {
+              button.addEventListener('click', async (event) => {
+                  const workerId = event.currentTarget.getAttribute('data-id');
+                  const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este trabajador?');
+                  if (confirmDelete) {
+                      try {
+                          await ipcRenderer.invoke('delete-worker', workerId);
+                          alert('Trabajador eliminado con éxito.');
+                          renderWorkers(content); // Recargar trabajadores
+                      } catch (error) {
+                          console.error('Error al eliminar trabajador:', error);
+                          alert('Error al eliminar el trabajador.');
+                      }
+                  }
+              });
+          });
+
+          document.querySelectorAll('.btnEditWorker').forEach(button => {
+              button.addEventListener('click', () => {
+                  const workerId = button.getAttribute('data-id');
+                  ipcRenderer.send('open-edit-worker-window', workerId);
+              });
+          });
+      } else {
+          tableBody.innerHTML = `<tr><td colspan="9">No hay trabajadores disponibles.</td></tr>`;
+      }
+  } catch (error) {
+      console.error('Error al obtener trabajadores:', error);
+      const tableBody = document.getElementById('workersTableBody');
+      tableBody.innerHTML = `<tr><td colspan="9">Error al cargar trabajadores.</td></tr>`;
+  }
+}
+
+// Escuchar el evento para refrescar la tabla de trabajadores
+ipcRenderer.on('refresh-workers', () => {
+  const content = document.getElementById('content');
+  renderWorkers(content); // Recargar la tabla de trabajadores
+});

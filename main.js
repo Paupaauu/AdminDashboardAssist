@@ -5,12 +5,12 @@ const fs = require("fs");
 const Campaign = require("./src/backend/models/campaigns"); // Importamos el modelo campaigns
 const Client = require('./src/backend/models/clients'); // Importamos el modelo clients
 const Site = require('./src/backend/models/sites'); // Importar el modelo sites
-const Activities = require('./src/backend/models/activities'); // Importar el modelo activities
+const Worker = require('./src/backend/models/workers'); // Importar el modelo workers
 let mainWindow; // Variable global para la ventana principal
 let newCampaignWindow = null; // Variable global para la ventana de crear nueva campaña
 let newClientWindow = null; // Variable global para la ventana de crear nueva campaña
 let newSiteWindow = null; // Variable global para la ventana de crear nuevo sitio
-
+let newWorkerWindow = null; // Variable global para la ventana de crear nuevo trabajador
 // Función que crea la ventana principal
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -63,6 +63,10 @@ if (process.env.NODE_ENV !== 'production') {
 
     })
 }
+
+
+
+
 
 //-------------------CAMPAÑAS--------------------//
 /*----Lógica para Crear Campaña--------------------------------------------------------------------*/
@@ -565,4 +569,150 @@ ipcMain.on('close-edit-site-window', () => {
 });
 
 
+//-------------------WORKERS--------------------//
+let editWorkerWindow = null; // Ventana para editar trabajador
 
+/*----Lógica para Crear Trabajador--------------------------------------------------------------------*/
+ipcMain.on('open-new-worker-window', () => {
+    if (newWorkerWindow) {
+        newWorkerWindow.focus();
+        return;
+    }
+
+    // Crear la ventana de nuevo trabajador
+    newWorkerWindow = new BrowserWindow({
+        width: 575,
+        height: 700,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+    newWorkerWindow.setMenu(null);
+    newWorkerWindow.loadFile('./src/frontend/views/newWorker.html');
+
+    newWorkerWindow.on('closed', () => {
+        newWorkerWindow = null;
+    });
+});
+
+ipcMain.on('close-new-worker-window', () => {
+    if (newWorkerWindow) {
+        newWorkerWindow.close();
+        newWorkerWindow = null;
+    }
+
+    // Actualiza la vista de trabajadores
+    mainWindow.webContents.send('refresh-workers');
+});
+
+// Recibimos los datos del nuevo trabajador y los guardamos en la base de datos
+ipcMain.on('add-worker', async (event, workerData) => {
+    try {
+        const newWorker = new Worker(workerData);
+        await newWorker.save();
+        event.sender.send('add-worker-success');
+        mainWindow.webContents.send('refresh-workers'); // Recargar la vista
+    } catch (error) {
+        console.error('Error al guardar trabajador:', error);
+        if (error.code === 11000) {
+            event.sender.send('add-worker-error', 'El ID del trabajador ya existe.');
+        } else {
+            event.sender.send('add-worker-error', error.message);
+        }
+    }
+});
+
+/*----Lógica para Mostrar Trabajadores----------------------------------------------------------------*/
+ipcMain.handle('get-workers', async () => {
+    try {
+        const workers = await Worker.find().lean(); // Obtener todos los trabajadores
+        return workers;
+    } catch (error) {
+        console.error('Error al obtener trabajadores:', error);
+        throw error;
+    }
+});
+
+/*----Lógica para Eliminar Trabajador----------------------------------------------------------------*/
+ipcMain.handle('delete-worker', async (event, workerId) => {
+    try {
+        const result = await Worker.findOneAndDelete({ agent_id: workerId });
+        if (result) {
+            console.log(`Trabajador eliminado con éxito: ${workerId}`);
+        } else {
+            throw new Error('No se encontró ningún trabajador con ese ID.');
+        }
+    } catch (error) {
+        console.error('Error al eliminar trabajador:', error);
+        throw error;
+    }
+});
+
+/*----Lógica para Editar Trabajador------------------------------------------------------------------*/
+ipcMain.on('open-edit-worker-window', async (event, workerId) => {
+    if (editWorkerWindow) {
+        editWorkerWindow.focus();
+        return;
+    }
+
+    const workerData = await Worker.findOne({ agent_id: workerId }).lean();
+
+    if (!workerData) {
+        event.sender.send('edit-worker-error', 'No se encontró el trabajador.');
+        return;
+    }
+
+    editWorkerWindow = new BrowserWindow({
+        width: 575,
+        height: 700,
+        parent: mainWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false
+        }
+    });
+
+    editWorkerWindow.setMenu(null);
+    editWorkerWindow.loadFile('./src/frontend/views/editWorker.html');
+
+    editWorkerWindow.webContents.on('did-finish-load', () => {
+        editWorkerWindow.webContents.send('load-worker-data', workerData);
+    });
+
+    editWorkerWindow.on('closed', () => {
+        editWorkerWindow = null;
+    });
+});
+
+ipcMain.on('update-worker', async (event, updatedWorker) => {
+    try {
+        const result = await Worker.findOneAndUpdate(
+            { agent_id: updatedWorker.agent_id },
+            updatedWorker,
+            { new: true }
+        );
+
+        if (result) {
+            event.sender.send('update-worker-success');
+        } else {
+            throw new Error('No se encontró el trabajador para actualizar.');
+        }
+    } catch (error) {
+        console.error('Error al actualizar trabajador:', error);
+        event.sender.send('update-worker-error', error.message);
+    }
+});
+
+ipcMain.on('close-edit-worker-window', () => {
+    if (editWorkerWindow) {
+        editWorkerWindow.close();
+        editWorkerWindow = null;
+    }
+
+    // Actualiza la vista de trabajadores
+    mainWindow.webContents.send('refresh-workers');
+});
