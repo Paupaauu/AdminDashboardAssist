@@ -151,21 +151,9 @@ async function renderClients(content) {
   content.innerHTML = `
     <h1>Clientes existentes</h1>
     <button id="btnOpenNewClient" class="btn btn-primary mb-3">Nuevo cliente</button>
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Nombre</th>
-          <th>Email Responsable</th>
-          <th>Descripción</th>
-          <th>Img</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="clientsTableBody">
-        <tr><td colspan="7">Cargando clientes...</td></tr>
-      </tbody>
-    </table>
+    <div class="row" id="clientsCardsContainer">
+      <!-- Aquí se insertarán las tarjetas de los clientes -->
+    </div>
   `;
 
   // Botón para abrir la ventana de nuevo cliente
@@ -177,33 +165,36 @@ async function renderClients(content) {
   // Solicitar clientes al backend
   try {
     const clients = await ipcRenderer.invoke('get-clients');
-    const tableBody = document.getElementById('clientsTableBody');
-    tableBody.innerHTML = ''; // Limpia el contenido actual
+    const container = document.getElementById('clientsCardsContainer');
+    container.innerHTML = ''; // Limpia el contenido actual
 
-    // Rellenar la tabla con los
+    // Rellenar el contenedor con las tarjetas de los clientes
     if (clients.length > 0) {
-      clients.forEach((clients, index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${clients.client_name}</td>
-          <td>${clients.email_manager_in_charge}</td>
-          <td>${clients.description}</td>
-          <td>${clients.image}</td>
-          <td>
-            <button class="btn btn-sm btn-primary btnEditClient" data-name="${clients.client_name}">Editar</button>
-            <button class="btn btn-sm btn-danger btnDeleteClient" data-name="${clients.client_name}">Eliminar</button>
-          </td>
+      clients.forEach(client => {
+        const card = document.createElement('div');
+        card.className = 'col-12 col-sm-6 col-md-4 col-lg-3 mb-4';
+        card.innerHTML = `
+          <div class="card shadow-sm">
+            <img src="${client.image}" class="card-img-top" alt="${client.client_name}">
+            <div class="card-body">
+              <h5 class="card-title">${client.client_name}</h5>
+              <p class="card-text"><strong>Email:</strong> ${client.email_manager_in_charge}</p>
+              <p class="card-text">${client.description}</p>
+            </div>
+            <div class="card-footer d-flex justify-content-between">
+              <button class="btn btn-primary btnEditClient" data-name="${client.client_name}">Editar</button>
+              <button class="btn btn-danger btnDeleteClient" data-name="${client.client_name}">Eliminar</button>
+            </div>
+          </div>
         `;
-        tableBody.appendChild(row);
+        container.appendChild(card);
       });
 
-      // Agregamos evento al boton "Eliminar"
+      // Agregar eventos a los botones
       const deleteButtons = document.querySelectorAll('.btnDeleteClient');
       deleteButtons.forEach(button => {
         button.addEventListener('click', async (event) => {
-          const clientName = event.currentTarget.getAttribute('data-name'); // Obtener el nombre del cliente
-          console.log('Nombre del cliente a eliminar:', clientName); // Depuración
+          const clientName = event.currentTarget.getAttribute('data-name');
           const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este cliente?');
           if (confirmDelete) {
             try {
@@ -216,23 +207,20 @@ async function renderClients(content) {
           }
         });
       });
+
+      const editButtons = document.querySelectorAll('.btnEditClient');
+      editButtons.forEach(button => {
+        button.addEventListener('click', () => {
+          const clientName = button.getAttribute('data-name');
+          ipcRenderer.send('open-edit-client-window', clientName);
+        });
+      });
     } else {
-      tableBody.innerHTML = `<tr><td colspan="7">No hay clientes disponibles.</td></tr>`;
+      container.innerHTML = `<p>No hay clientes disponibles.</p>`;
     }
   } catch (error) {
     console.error('Error al obtener clientes:', error);
-    const tableBody = document.getElementById('clientsTableBody');
-    tableBody.innerHTML = `<tr><td colspan="7">Error al cargar clientes.</td></tr>`;
+    const container = document.getElementById('clientsCardsContainer');
+    container.innerHTML = `<p>Error al cargar clientes.</p>`;
   }
-
-  // Agregamos evento al botón "Editar"
-  const editButtons = document.querySelectorAll('.btnEditClient');
-  editButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const clientName = button.getAttribute('data-name'); // Obtener el nombre del cliente
-      ipcRenderer.send('open-edit-client-window', clientName);
-    });
-  });
-
 }
-
