@@ -17,3 +17,13 @@
     height: 25px;
     font-size: 0.85rem; /* Tamaño más pequeño para el texto del email */
 }
+
+.card-footer {
+    padding-top: 0.2rem; /* Ajustar el espacio superior dentro del footer */
+    padding-bottom: 0.2rem; /* Ajustar el espacio inferior dentro del footer */
+}
+
+.card-footer .btn {
+    min-width: 50px; /* Asegura que los botones tengan un tamaño consistente */
+    text-align: center; /* Asegura que el texto esté centrado */
+}

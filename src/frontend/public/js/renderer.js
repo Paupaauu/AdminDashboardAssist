@@ -86,8 +86,8 @@ async function renderCampaigns(content) {
           <td>${campaign.language}</td>
           <td>${campaign.productive_hours_revenue}</td>
           <td>
-            <button class="btn btn-sm btn-primary btnEditCampaign" data-name="${campaign.campaign_name}">Editar</button>
-            <button class="btn btn-sm btn-danger btnDeleteCampaign" data-name="${campaign.campaign_name}">Eliminar</button>
+            <button class="btn btn-sm btn-primary btn-sm btnEditCampaign" data-name="${campaign.campaign_name}">Editar</button>
+            <button class="btn btn-sm btn-danger btn-sm btnDeleteCampaign" data-name="${campaign.campaign_name}">Eliminar</button>
           </td>
         `;
         tableBody.appendChild(row);
@@ -181,14 +181,14 @@ async function renderClients(content) {
                     <p class="card-text email"> ${client.email_manager_in_charge}</p>
                     <p class="card-text">${client.description}</p>
                 </div>
-                <div class="card-footer d-flex justify-content-between">
-                    <button class="btn btn-primary btnEditClient" data-name="${client.client_name}">Editar</button>
-                    <button class="btn btn-danger btnDeleteClient" data-name="${client.client_name}">Eliminar</button>
+                <div class="card-footer d-flex justify-content-end">
+                    <button class="btn btn-primary btn-sm btnEditClient me-2" data-name="${client.client_name}">Editar</button>
+                    <button class="btn btn-danger btn-sm btnDeleteClient" data-name="${client.client_name}">Eliminar</button>
                 </div>
             </div>
         `;
         container.appendChild(card);
-    });
+      });
       // Agregar eventos a los botones
       const deleteButtons = document.querySelectorAll('.btnDeleteClient');
       deleteButtons.forEach(button => {
