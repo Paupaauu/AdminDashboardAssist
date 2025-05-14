@@ -369,7 +369,7 @@ async function renderWorkers(content) {
                   <td>${worker.site}</td>
                   <td>${worker.activity}</td>
                   <td>${worker.campaign}</td>
-                  <td>${worker.hours_worked}</td>
+                  <td>${worker.hours_worked} h</td>
                   <td>
                       <button class="btn btn-sm btn-primary btnEditWorker me-2" data-id="${worker.agent_id}">Editar</button>
                       <button class="btn btn-sm btn-danger btnDeleteWorker" data-id="${worker.agent_id}">Eliminar</button>

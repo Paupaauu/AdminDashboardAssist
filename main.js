@@ -284,7 +284,7 @@ ipcMain.on('add-client', async (event, clientData) => {
             clientData.image = `img/${fileName}`; // Actualiza la ruta de la imagen en los datos del cliente
         }
 
-        const newClient = new Client(clientData); 
+        const newClient = new Client(clientData);
         await newClient.save(); // Guarda el cliente en la base de datos
         event.sender.send('add-client-success');
         mainWindow.webContents.send('refresh-clients'); // Actualiza la vista de clientes    
@@ -472,7 +472,7 @@ ipcMain.handle('get-sites', async () => {
         return sites; // Devolver los sitios al renderer.js
     } catch (error) {
         console.error('Error al obtener sitios:', error);
-        throw error; 
+        throw error;
     }
 });
 
@@ -581,7 +581,7 @@ ipcMain.on('open-new-worker-window', () => {
     // Crear la ventana de nuevo trabajador
     newWorkerWindow = new BrowserWindow({
         width: 575,
-        height: 700,
+        height: 800,
         parent: mainWindow,
         modal: true,
         webPreferences: {
@@ -620,7 +620,7 @@ ipcMain.on("add-worker", async (event, workerData) => {
         }
 
         // Guardar los datos del trabajador
-        const newWorker = new Worker(workerData); 
+        const newWorker = new Worker(workerData);
         await newWorker.save();
         event.sender.send("add-worker-success");
         mainWindow.webContents.send("refresh-workers"); // Recargar la vista de trabajadores
@@ -645,6 +645,20 @@ ipcMain.handle('get-sites-list', async () => {
         throw error;
     }
 });
+
+
+//-------Lógica para mostrar Campañas en el desplegable------------------------------------------------------------------
+ipcMain.handle('get-campaigns-list', async () => {
+    try {
+        console.log('get-campaigns-list invocado'); // Depuración
+        const campaigns = await Campaign.find({}, { campaign_name: 1, _id: 0 }).lean(); // Sólo obtener los nombres de las campañas
+        return campaigns;
+    } catch (error) {
+        console.error('Error al obtener la lista de campañas:', error);
+        throw error;
+    }
+});
+
 
 /*----Lógica para Mostrar Trabajadores----------------------------------------------------------------*/
 ipcMain.handle('get-workers', async () => {
@@ -674,17 +688,21 @@ ipcMain.handle('delete-worker', async (event, workerId) => {
 
 /*----Lógica para Editar Trabajador------------------------------------------------------------------*/
 ipcMain.on('open-edit-worker-window', async (event, workerId) => {
-    if (editWorkerWindow) {
+    if (editWorkerWindow) { // Si la ventana ya está abierta, la enfocamos
         editWorkerWindow.focus();
         return;
     }
 
+    //Obtenemos los datos del trabajador
     const workerData = await Worker.findOne({ agent_id: workerId }).lean();
-
     if (!workerData) {
         event.sender.send('edit-worker-error', 'No se encontró el trabajador.');
         return;
     }
+
+    // Obtenemos listas de sitios y campañas
+    const sites = await Site.find({}, { site_name: 1, _id: 0 }).lean();
+    const campaigns = await Campaign.find({}, { campaign_name: 1, _id: 0 }).lean();
 
     editWorkerWindow = new BrowserWindow({
         width: 575,
@@ -699,9 +717,11 @@ ipcMain.on('open-edit-worker-window', async (event, workerId) => {
 
     editWorkerWindow.setMenu(null);
     editWorkerWindow.loadFile('./src/frontend/views/editWorker.html');
+    editWorkerWindow.webContents.openDevTools();
+
 
     editWorkerWindow.webContents.on('did-finish-load', () => {
-        editWorkerWindow.webContents.send('load-worker-data', workerData);
+        editWorkerWindow.webContents.send('load-worker-data', { workerData, sites, campaigns });
     });
 
     editWorkerWindow.on('closed', () => {
@@ -748,11 +768,13 @@ ipcMain.handle('get-kpi-data', async () => {
 
         // Agentes por sitio y horas trabajadas por sitio
         const workers = await Worker.aggregate([
-            { $group: { 
-                _id: "$site", 
-                totalAgents: { $sum: 1 }, 
-                totalHoursWorked: { $sum: "$hours_worked" }
-            }}
+            {
+                $group: {
+                    _id: "$site",
+                    totalAgents: { $sum: 1 },
+                    totalHoursWorked: { $sum: "$hours_worked" }
+                }
+            }
         ]);
 
         return {

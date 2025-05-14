@@ -1,7 +1,8 @@
 const { ipcRenderer } = require('electron');
-// Cargar la lista de sitios al abrir el formulario
 window.onload = async () => {
     try {
+
+        // Cargar la lista de sitios
         const sites = await ipcRenderer.invoke('get-sites-list'); // Invocar el manejador 'get-sites-list'
         const siteSelect = document.getElementById("selectNewSite");
 
@@ -25,6 +26,29 @@ window.onload = async () => {
                 console.warn(`Un sitio no tiene el campo 'site_name', se omitirá. Sitio: ${JSON.stringify(site)}`);
             }
         });
+        // Cargar la lista de campañas
+        const campaigns = await ipcRenderer.invoke('get-campaigns-list');
+        const campaignSelect = document.getElementById("selectNewCampaign");
+
+        console.log('Campañas cargadas:', campaigns); // Depuración
+
+        if (!campaignSelect) {
+            console.error("El elemento select con id 'selectNewCampaign' no se encontró en el DOM.");
+            return;
+        }
+
+        campaigns.forEach(campaign => {
+            if (campaign.campaign_name) {
+                const option = document.createElement('option');
+                option.value = campaign.campaign_name;
+                option.textContent = campaign.campaign_name;
+                campaignSelect.appendChild(option);
+            } else {
+                console.warn(`Una campaña no tiene el campo 'campaign_name', se omitirá. Campaña: ${JSON.stringify(campaign)}`);
+            }
+        });
+
+
     } catch (error) {
         console.error('Error al cargar la lista de sitios:', error);
         alert('Error al cargar la lista de sitios. Consulte la consola para más detalles.');
@@ -40,11 +64,11 @@ document.getElementById("btnNewWorker").addEventListener('click', () => {
         agent_surname2: document.getElementById("txtNewSurname2").value.trim(),
         site: document.getElementById("selectNewSite").value, // Obtenemos el valor seleccionado
         activity: document.getElementById("txtNewActivity").value.trim(),
-        campaign: document.getElementById("txtNewCampaign").value.trim(),
+        campaign: document.getElementById("selectNewCampaign").value.trim(), // Usar el valor del nuevo desplegable
         hours_worked: parseFloat(document.getElementById("txtNewHoursWorked").value.trim()),
     };
 
-    if (!workerData.agent_id || !workerData.agent_name || !workerData.agent_surname1 || !workerData.site || !workerData.activity|| !workerData.campaign || isNaN(workerData.hours_worked)) {
+    if (!workerData.agent_id || !workerData.agent_name || !workerData.agent_surname1 || !workerData.site || !workerData.activity || !workerData.campaign || isNaN(workerData.hours_worked)) {
         alert("Debe completar todos los campos obligatorios.");
         return;
     }
