@@ -237,7 +237,7 @@ ipcRenderer.on('refresh-sites', () => {
 // Función para renderizar la vista de sitios
 async function renderSites(content) {
   content.innerHTML = `
-    <h1>Sitios existentes</h1>
+    <h1>Sitios Existentes</h1>
     <button id="btnOpenNewSite" class="btn btn-primary mb-3">Nuevo sitio</button>
     <table class="table table-striped">
       <thead>
@@ -420,7 +420,7 @@ ipcRenderer.on('refresh-workers', () => {
 //--------------------MAIN--------------------//
 async function renderMain(content) {
   content.innerHTML = `
-      <h1>Resumen de KPI</h1>
+      <h1>Situación Global</h1>
       <div class="row">
           <div class="col-md-6">
               <div class="card shadow-sm">

@@ -86,7 +86,7 @@ ipcMain.on('open-new-campaign-window', () => {
     });
     newCampaignWindow.setMenu(null);
     newCampaignWindow.loadFile('./src/frontend/views/newCampaign.html');
-    // newCampaignWindow.webContents.openDevTools();
+    newCampaignWindow.webContents.openDevTools();
 
     newCampaignWindow.on('closed', () => {
         newCampaignWindow = null;
@@ -164,6 +164,9 @@ ipcMain.on('open-edit-campaign-window', async (event, campaignName) => {
         return;
     }
 
+     // Obtener la lista de clientes
+     const clients = await Client.find({}, { client_name: 1, _id: 0 }).lean();
+
     editCampaignWindow = new BrowserWindow({
         width: 575,
         height: 700,
@@ -182,8 +185,9 @@ ipcMain.on('open-edit-campaign-window', async (event, campaignName) => {
         editCampaignWindow = null;
     });
 
+    // Enviar los datos al renderizador después de que la ventana cargue
     editCampaignWindow.webContents.on('did-finish-load', () => {
-        editCampaignWindow.webContents.send('load-campaign-data', campaignData);
+        editCampaignWindow.webContents.send('load-campaign-data', { campaignData, clients });
     });
 });
 
@@ -581,7 +585,7 @@ ipcMain.on('open-new-worker-window', () => {
     // Crear la ventana de nuevo trabajador
     newWorkerWindow = new BrowserWindow({
         width: 575,
-        height: 800,
+        height: 900,
         parent: mainWindow,
         modal: true,
         webPreferences: {
@@ -591,7 +595,7 @@ ipcMain.on('open-new-worker-window', () => {
     });
     newWorkerWindow.setMenu(null);
     newWorkerWindow.loadFile('./src/frontend/views/newWorker.html');
-    newWorkerWindow.webContents.openDevTools();
+    //newWorkerWindow.webContents.openDevTools();
 
 
     newWorkerWindow.on('closed', () => {
@@ -671,6 +675,18 @@ ipcMain.handle('get-workers', async () => {
     }
 });
 
+/*----Lógica para Mostrar Clientes----------------------------------------------------------------*/
+ipcMain.handle('get-clients-list', async () => {
+    try {
+        // Obtener solo los nombres de los clientes
+        const clients = await Client.find({}, { client_name: 1, _id: 0 }).lean();
+        return clients; // Devuelve la lista de clientes
+    } catch (error) {
+        console.error('Error al obtener la lista de clientes:', error);
+        throw error;
+    }
+});
+
 /*----Lógica para Eliminar Trabajador----------------------------------------------------------------*/
 ipcMain.handle('delete-worker', async (event, workerId) => {
     try {
@@ -706,7 +722,7 @@ ipcMain.on('open-edit-worker-window', async (event, workerId) => {
 
     editWorkerWindow = new BrowserWindow({
         width: 575,
-        height: 700,
+        height: 900,
         parent: mainWindow,
         modal: true,
         webPreferences: {
@@ -717,7 +733,7 @@ ipcMain.on('open-edit-worker-window', async (event, workerId) => {
 
     editWorkerWindow.setMenu(null);
     editWorkerWindow.loadFile('./src/frontend/views/editWorker.html');
-    editWorkerWindow.webContents.openDevTools();
+    // editWorkerWindow.webContents.openDevTools();
 
 
     editWorkerWindow.webContents.on('did-finish-load', () => {
