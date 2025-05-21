@@ -638,7 +638,7 @@ ipcMain.on("add-worker", async (event, workerData) => {
     }
 });
 
-//-------Lógica para mostrar Sites en el desplegable de--------------------------------------------------------------------------------------------------
+//-------Lógica para mostrar Sites en el desplegable--------------------------------------------------------------------------------------------------
 ipcMain.handle('get-sites-list', async () => {
     try {
         console.log('get-sites-list invocado'); // Depuración
@@ -687,6 +687,8 @@ ipcMain.handle('get-clients-list', async () => {
     }
 });
 
+
+
 /*----Lógica para Eliminar Trabajador----------------------------------------------------------------*/
 ipcMain.handle('delete-worker', async (event, workerId) => {
     try {
@@ -698,6 +700,39 @@ ipcMain.handle('delete-worker', async (event, workerId) => {
         }
     } catch (error) {
         console.error('Error al eliminar trabajador:', error);
+        throw error;
+    }
+});
+
+/*----Lógica para buscar trabajadores por criterios específicos----------------------------------------------------------------*/
+ipcMain.handle('search-workers', async (event, searchCriteria) => {
+    try {
+        // Construir un filtro dinámico basado en los criterios de búsqueda
+        const filter = {};
+
+        if (searchCriteria.agent_id) {
+            filter.agent_id = { $regex: searchCriteria.agent_id, $options: 'i' }; // Búsqueda por ID
+        }
+        if (searchCriteria.agent_name) {
+            filter.agent_name = { $regex: searchCriteria.agent_name, $options: 'i' }; // Búsqueda por nombre
+        }
+        if (searchCriteria.agent_surname1) {
+            filter.agent_surname1 = { $regex: searchCriteria.agent_surname1, $options: 'i' }; // Primer apellido
+        }
+        if (searchCriteria.agent_surname2) {
+            filter.agent_surname2 = { $regex: searchCriteria.agent_surname2, $options: 'i' }; // Segundo apellido
+        }
+        if (searchCriteria.site) {
+            filter.site = { $regex: searchCriteria.site, $options: 'i' }; // Sitio
+        }
+        if (searchCriteria.campaign) {
+            filter.campaign = { $regex: searchCriteria.campaign, $options: 'i' }; // Campaña
+        }
+
+        const workers = await Worker.find(filter).lean(); // Buscar trabajadores con el filtro
+        return workers;
+    } catch (error) {
+        console.error('Error al buscar trabajadores:', error);
         throw error;
     }
 });

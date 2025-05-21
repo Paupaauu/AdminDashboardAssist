@@ -325,6 +325,33 @@ async function renderSites(content) {
 async function renderWorkers(content) {
   content.innerHTML = `
       <h1>Trabajadores existentes</h1>
+      <div class="mb-3">
+        <h5>Buscar trabajadores:</h5>
+        <form id="workerSearchForm" class="row row-cols-lg-auto g-3 align-items-center">
+          <div class="col">
+            <input type="text" class="form-control" id="searchAgentId" placeholder="ID del trabajador">
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" id="searchAgentName" placeholder="Nombre">
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" id="searchAgentSurname1" placeholder="Primer apellido">
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" id="searchAgentSurname2" placeholder="Segundo apellido">
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" id="searchSite" placeholder="Sitio">
+          </div>
+          <div class="col">
+            <input type="text" class="form-control" id="searchCampaign" placeholder="Campaña">
+          </div>
+          <div class="col">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <button type="button" id="btnClearFilters" class="btn btn-secondary">Limpiar</button>
+          </div>
+        </form>
+      </div>
       <button id="btnOpenNewWorker" class="btn btn-primary mb-3">Nuevo trabajador</button>
       <table class="table table-striped">
           <thead>
@@ -347,76 +374,114 @@ async function renderWorkers(content) {
       </table>
   `;
 
+  // Botón para abrir la ventana de nuevo trabajador
   const btnOpenNewWorker = document.getElementById("btnOpenNewWorker");
   btnOpenNewWorker.addEventListener('click', () => {
       ipcRenderer.send('open-new-worker-window');
   });
 
-  try {
+  // Escuchar el evento de búsqueda
+  const workerSearchForm = document.getElementById("workerSearchForm");
+  workerSearchForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      // Obtener los valores de los campos de búsqueda
+      const searchCriteria = {
+          agent_id: document.getElementById("searchAgentId").value.trim(),
+          agent_name: document.getElementById("searchAgentName").value.trim(),
+          agent_surname1: document.getElementById("searchAgentSurname1").value.trim(),
+          agent_surname2: document.getElementById("searchAgentSurname2").value.trim(),
+          site: document.getElementById("searchSite").value.trim(),
+          campaign: document.getElementById("searchCampaign").value.trim(),
+      };
+
+      // Enviar los criterios de búsqueda al proceso principal
+      const workers = await ipcRenderer.invoke('search-workers', searchCriteria);
+      renderWorkersTable(workers); // Renderizar la tabla con los resultados
+  });
+
+  // Botón para limpiar los filtros
+  const btnClearFilters = document.getElementById("btnClearFilters");
+  btnClearFilters.addEventListener('click', async () => {
+      // Limpiar los campos del formulario
+      document.getElementById("searchAgentId").value = '';
+      document.getElementById("searchAgentName").value = '';
+      document.getElementById("searchAgentSurname1").value = '';
+      document.getElementById("searchAgentSurname2").value = '';
+      document.getElementById("searchSite").value = '';
+      document.getElementById("searchCampaign").value = '';
+
+      // Cargar todos los trabajadores nuevamente
       const workers = await ipcRenderer.invoke('get-workers');
-      const tableBody = document.getElementById('workersTableBody');
-      tableBody.innerHTML = ''; // Limpia el contenido actual
+      renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
+  });
 
-      if (workers.length > 0) {
-          workers.forEach((worker, index) => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                  <td>${index + 1}</td>
-                  <td>${worker.agent_id}</td>
-                  <td>${worker.agent_name}</td>
-                  <td>${worker.agent_surname1}</td>
-                  <td>${worker.agent_surname2}</td>
-                  <td>${worker.site}</td>
-                  <td>${worker.activity}</td>
-                  <td>${worker.campaign}</td>
-                  <td>${worker.hours_worked} h</td>
-                  <td>
-                      <button class="btn btn-sm btn-primary btnEditWorker me-2" data-id="${worker.agent_id}">Editar</button>
-                      <button class="btn btn-sm btn-danger btnDeleteWorker" data-id="${worker.agent_id}">Eliminar</button>
-                  </td>
-              `;
-              tableBody.appendChild(row);
-          });
+  // Manejar el evento `refresh-workers` para actualizar la tabla automáticamente
+  ipcRenderer.on('refresh-workers', async () => {
+      const workers = await ipcRenderer.invoke('get-workers');
+      renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
+  });
 
-          document.querySelectorAll('.btnDeleteWorker').forEach(button => {
-              button.addEventListener('click', async (event) => {
-                  const workerId = event.currentTarget.getAttribute('data-id');
-                  const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este trabajador?');
-                  if (confirmDelete) {
-                      try {
-                          await ipcRenderer.invoke('delete-worker', workerId);
-                          alert('Trabajador eliminado con éxito.');
-                          renderWorkers(content); // Recargar trabajadores
-                      } catch (error) {
-                          console.error('Error al eliminar trabajador:', error);
-                          alert('Error al eliminar el trabajador.');
-                      }
-                  }
-              });
-          });
-
-          document.querySelectorAll('.btnEditWorker').forEach(button => {
-              button.addEventListener('click', () => {
-                  const workerId = button.getAttribute('data-id');
-                  ipcRenderer.send('open-edit-worker-window', workerId);
-              });
-          });
-      } else {
-          tableBody.innerHTML = `<tr><td colspan="9">No hay trabajadores disponibles.</td></tr>`;
-      }
-  } catch (error) {
-      console.error('Error al obtener trabajadores:', error);
-      const tableBody = document.getElementById('workersTableBody');
-      tableBody.innerHTML = `<tr><td colspan="9">Error al cargar trabajadores.</td></tr>`;
-  }
+  // Cargar todos los trabajadores al inicio
+  const workers = await ipcRenderer.invoke('get-workers');
+  renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
 }
 
-// Escuchar el evento para refrescar la tabla de trabajadores
-ipcRenderer.on('refresh-workers', () => {
-  const content = document.getElementById('content');
-  renderWorkers(content); // Recargar la tabla de trabajadores
-});
+// Función para renderizar la tabla de trabajadores
+function renderWorkersTable(workers) {
+    const tableBody = document.getElementById('workersTableBody');
+    tableBody.innerHTML = ''; // Limpia el contenido actual
 
+    if (workers.length > 0) {
+        workers.forEach((worker, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${worker.agent_id}</td>
+                <td>${worker.agent_name}</td>
+                <td>${worker.agent_surname1}</td>
+                <td>${worker.agent_surname2}</td>
+                <td>${worker.site}</td>
+                <td>${worker.activity}</td>
+                <td>${worker.campaign}</td>
+                <td>${worker.hours_worked} h</td>
+                <td>
+                    <button class="btn btn-sm btn-primary btnEditWorker me-2" data-id="${worker.agent_id}">Editar</button>
+                    <button class="btn btn-sm btn-danger btnDeleteWorker" data-id="${worker.agent_id}">Eliminar</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+
+        // Agregar eventos a los botones de acciones
+        document.querySelectorAll('.btnDeleteWorker').forEach(button => {
+            button.addEventListener('click', async (event) => {
+                const workerId = event.currentTarget.getAttribute('data-id');
+                const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este trabajador?');
+                if (confirmDelete) {
+                    try {
+                        await ipcRenderer.invoke('delete-worker', workerId);
+                        alert('Trabajador eliminado con éxito.');
+                        const workers = await ipcRenderer.invoke('get-workers');
+                        renderWorkersTable(workers); // Recargar la tabla
+                    } catch (error) {
+                        console.error('Error al eliminar trabajador:', error);
+                        alert('Error al eliminar el trabajador.');
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.btnEditWorker').forEach(button => {
+            button.addEventListener('click', () => {
+                const workerId = button.getAttribute('data-id');
+                ipcRenderer.send('open-edit-worker-window', workerId);
+            });
+        });
+    } else {
+        tableBody.innerHTML = `<tr><td colspan="9">No se encontraron trabajadores.</td></tr>`;
+    }
+}
 //--------------------MAIN--------------------//
 async function renderMain(content) {
   content.innerHTML = `
@@ -457,32 +522,32 @@ async function renderMain(content) {
 
   // Solicitar datos de KPI al backend
   try {
-      const kpiData = await ipcRenderer.invoke('get-kpi-data');
+    const kpiData = await ipcRenderer.invoke('get-kpi-data');
 
-      // Mostrar el total de sitios y clientes
-      document.getElementById('totalSites').textContent = kpiData.totalSites;
-      document.getElementById('totalClients').textContent = kpiData.totalClients;
+    // Mostrar el total de sitios y clientes
+    document.getElementById('totalSites').textContent = kpiData.totalSites;
+    document.getElementById('totalClients').textContent = kpiData.totalClients;
 
-      // Mostrar el detalle por sitio
-      const siteDetails = document.getElementById('siteDetails');
-      siteDetails.innerHTML = ''; // Limpiar contenido actual
+    // Mostrar el detalle por sitio
+    const siteDetails = document.getElementById('siteDetails');
+    siteDetails.innerHTML = ''; // Limpiar contenido actual
 
-      if (kpiData.workers.length > 0) {
-          kpiData.workers.forEach(worker => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
+    if (kpiData.workers.length > 0) {
+      kpiData.workers.forEach(worker => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
                   <td>${worker._id}</td>
                   <td>${worker.totalAgents}</td>
                   <td>${worker.totalHoursWorked}</td>
               `;
-              siteDetails.appendChild(row);
-          });
-      } else {
-          siteDetails.innerHTML = `<tr><td colspan="3">No hay datos disponibles.</td></tr>`;
-      }
+        siteDetails.appendChild(row);
+      });
+    } else {
+      siteDetails.innerHTML = `<tr><td colspan="3">No hay datos disponibles.</td></tr>`;
+    }
   } catch (error) {
-      console.error('Error al cargar datos de KPI:', error);
-      const siteDetails = document.getElementById('siteDetails');
-      siteDetails.innerHTML = `<tr><td colspan="3">Error al cargar datos.</td></tr>`;
+    console.error('Error al cargar datos de KPI:', error);
+    const siteDetails = document.getElementById('siteDetails');
+    siteDetails.innerHTML = `<tr><td colspan="3">Error al cargar datos.</td></tr>`;
   }
 }

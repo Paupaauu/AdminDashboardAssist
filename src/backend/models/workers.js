@@ -16,7 +16,7 @@ const workersSchema = new mongoose.Schema({
   },
   agent_surname2: {
     type: String, 
-    required: true 
+    required: false 
   },
   site: {
     type: String, 
