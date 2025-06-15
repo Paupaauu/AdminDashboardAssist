@@ -6,6 +6,9 @@ const Campaign = require("./src/backend/models/campaigns"); // Importamos el mod
 const Client = require('./src/backend/models/clients'); // Importamos el modelo clients
 const Site = require('./src/backend/models/sites'); // Importar el modelo sites
 const Worker = require('./src/backend/models/workers'); // Importar el modelo workers
+const bcrypt = require('bcryptjs');
+const User = require('./src/backend/models/users');
+let loggedInUser = null; // variable global para la sesión
 let mainWindow; // Variable global para la ventana principal
 let newCampaignWindow = null; // Variable global para la ventana de crear nueva campaña
 let newClientWindow = null; // Variable global para la ventana de crear nueva campaña
@@ -25,7 +28,7 @@ function createWindow() {
     //quita menú por defecto de chromium
     mainWindow.setMenu(null);
     // Carga el archivo HTML en la ventana
-    mainWindow.loadFile("./src/frontend/views/index.html");
+    mainWindow.loadFile("./src/frontend/views/login.html");
     mainWindow.webContents.openDevTools(); //Abre automaticamente herramientas de depuración
 }
 
@@ -63,6 +66,18 @@ if (process.env.NODE_ENV !== 'production') {
 
     })
 }
+
+//------------------CARGA APP CUANDO LOGIN ES CORRECTO------------------//
+ipcMain.handle('do-login', async (event, { username, password }) => {
+  const user = await User.findOne({ username });
+  if (user && bcrypt.compareSync(password, user.password)) {
+    loggedInUser = username;
+    mainWindow.loadFile("./src/frontend/views/index.html"); // dashboard principal
+    return true;
+  }
+  return false;
+});
+
 
 
 //-------------------CAMPAÑAS--------------------//
