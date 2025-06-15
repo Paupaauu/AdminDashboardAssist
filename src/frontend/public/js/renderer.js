@@ -491,7 +491,7 @@ async function renderMain(content) {
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">Agentes por Sitio</h5>
-            <canvas id="agentsBySiteChart" height="180"></canvas>
+            <canvas id="agentsBySiteChart" width="400" height="180"></canvas>
           </div>
         </div>
       </div>
@@ -499,7 +499,7 @@ async function renderMain(content) {
         <div class="card shadow-sm">
           <div class="card-body">
             <h5 class="card-title">Margen Monetario por Cliente</h5>
-            <canvas id="marginByClientChart" height="180"></canvas>
+            <canvas id="marginByClientChart" width="400" height="180"></canvas>
           </div>
         </div>
       </div>
@@ -528,35 +528,40 @@ async function renderMain(content) {
   `;
 
   const kpi = await ipcRenderer.invoke('get-campaigns-kpi');
+
   // 1. Gráfico Agentes por Sitio
-  if (kpi.agentsBySite) { //Verificamos que exista la propiedad "agentsBySite" dentro del objeto kpi
-    const labels = kpi.agentsBySite.map(e => e.site); //Extraemos los nombres de los sitios y los guardamos como etiquetas
-    const data = kpi.agentsBySite.map(e => e.totalAgents); //Extraemos el número de agentes por sitio y lo guardamos como datos
-    const ctx = document.getElementById('agentsBySiteChart').getContext('2d'); //Seleccionamos el canvas con id "agentsBySiteChart"
-    new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [{
-          label: 'Nº de Agentes',
-          data,
-          backgroundColor: 'rgba(54, 162, 235, 0.7)'
-        }]
+if (kpi.agentsBySite) {
+  const labels = kpi.agentsBySite.map(e => e.site);
+  const data = kpi.agentsBySite.map(e => e.totalAgents);
+  const ctx = document.getElementById('agentsBySiteChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Nº de Agentes',
+        data,
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.7)',
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // <-- Esto hace el gráfico horizontal
+      plugins: {
+        legend: {
+          display: false
+        }
       },
-      options: { //Opciones de visualización del gráfico
-        plugins: {
-          legend: {
-            display: false //ocultamos la leyenda del gráfico
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true //hacemos que el eje Y comience en 0
-          }
+      scales: {
+        x: {
+          beginAtZero: true
         }
       }
-    });
-  }
+    }
+  });
+}
 
   // 2. Gráfico Margen por Cliente
   if (kpi.clientMargins) { // Verificamos que exista la propiedad "clientMargins" dentro del objeto kp
