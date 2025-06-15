@@ -377,49 +377,49 @@ async function renderWorkers(content) {
   // Botón para abrir la ventana de nuevo trabajador
   const btnOpenNewWorker = document.getElementById("btnOpenNewWorker");
   btnOpenNewWorker.addEventListener('click', () => {
-      ipcRenderer.send('open-new-worker-window');
+    ipcRenderer.send('open-new-worker-window');
   });
 
   // Escuchar el evento de búsqueda
   const workerSearchForm = document.getElementById("workerSearchForm");
   workerSearchForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
+    event.preventDefault();
 
-      // Obtener los valores de los campos de búsqueda
-      const searchCriteria = {
-          agent_id: document.getElementById("searchAgentId").value.trim(),
-          agent_name: document.getElementById("searchAgentName").value.trim(),
-          agent_surname1: document.getElementById("searchAgentSurname1").value.trim(),
-          agent_surname2: document.getElementById("searchAgentSurname2").value.trim(),
-          site: document.getElementById("searchSite").value.trim(),
-          campaign: document.getElementById("searchCampaign").value.trim(),
-      };
+    // Obtener los valores de los campos de búsqueda
+    const searchCriteria = {
+      agent_id: document.getElementById("searchAgentId").value.trim(),
+      agent_name: document.getElementById("searchAgentName").value.trim(),
+      agent_surname1: document.getElementById("searchAgentSurname1").value.trim(),
+      agent_surname2: document.getElementById("searchAgentSurname2").value.trim(),
+      site: document.getElementById("searchSite").value.trim(),
+      campaign: document.getElementById("searchCampaign").value.trim(),
+    };
 
-      // Enviar los criterios de búsqueda al proceso principal
-      const workers = await ipcRenderer.invoke('search-workers', searchCriteria);
-      renderWorkersTable(workers); // Renderizar la tabla con los resultados
+    // Enviar los criterios de búsqueda al proceso principal
+    const workers = await ipcRenderer.invoke('search-workers', searchCriteria);
+    renderWorkersTable(workers); // Renderizar la tabla con los resultados
   });
 
   // Botón para limpiar los filtros
   const btnClearFilters = document.getElementById("btnClearFilters");
   btnClearFilters.addEventListener('click', async () => {
-      // Limpiar los campos del formulario
-      document.getElementById("searchAgentId").value = '';
-      document.getElementById("searchAgentName").value = '';
-      document.getElementById("searchAgentSurname1").value = '';
-      document.getElementById("searchAgentSurname2").value = '';
-      document.getElementById("searchSite").value = '';
-      document.getElementById("searchCampaign").value = '';
+    // Limpiar los campos del formulario
+    document.getElementById("searchAgentId").value = '';
+    document.getElementById("searchAgentName").value = '';
+    document.getElementById("searchAgentSurname1").value = '';
+    document.getElementById("searchAgentSurname2").value = '';
+    document.getElementById("searchSite").value = '';
+    document.getElementById("searchCampaign").value = '';
 
-      // Cargar todos los trabajadores nuevamente
-      const workers = await ipcRenderer.invoke('get-workers');
-      renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
+    // Cargar todos los trabajadores nuevamente
+    const workers = await ipcRenderer.invoke('get-workers');
+    renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
   });
 
   // Manejar el evento `refresh-workers` para actualizar la tabla automáticamente
   ipcRenderer.on('refresh-workers', async () => {
-      const workers = await ipcRenderer.invoke('get-workers');
-      renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
+    const workers = await ipcRenderer.invoke('get-workers');
+    renderWorkersTable(workers); // Renderizar la tabla con todos los trabajadores
   });
 
   // Cargar todos los trabajadores al inicio
@@ -429,13 +429,13 @@ async function renderWorkers(content) {
 
 // Función para renderizar la tabla de trabajadores
 function renderWorkersTable(workers) {
-    const tableBody = document.getElementById('workersTableBody');
-    tableBody.innerHTML = ''; // Limpia el contenido actual
+  const tableBody = document.getElementById('workersTableBody');
+  tableBody.innerHTML = ''; // Limpia el contenido actual
 
-    if (workers.length > 0) {
-        workers.forEach((worker, index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
+  if (workers.length > 0) {
+    workers.forEach((worker, index) => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
                 <td>${index + 1}</td>
                 <td>${worker.agent_id}</td>
                 <td>${worker.agent_name}</td>
@@ -450,37 +450,37 @@ function renderWorkersTable(workers) {
                     <button class="btn btn-sm btn-danger btnDeleteWorker" data-id="${worker.agent_id}">Eliminar</button>
                 </td>
             `;
-            tableBody.appendChild(row);
-        });
+      tableBody.appendChild(row);
+    });
 
-        // Agregar eventos a los botones de acciones
-        document.querySelectorAll('.btnDeleteWorker').forEach(button => {
-            button.addEventListener('click', async (event) => {
-                const workerId = event.currentTarget.getAttribute('data-id');
-                const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este trabajador?');
-                if (confirmDelete) {
-                    try {
-                        await ipcRenderer.invoke('delete-worker', workerId);
-                        alert('Trabajador eliminado con éxito.');
-                        const workers = await ipcRenderer.invoke('get-workers');
-                        renderWorkersTable(workers); // Recargar la tabla
-                    } catch (error) {
-                        console.error('Error al eliminar trabajador:', error);
-                        alert('Error al eliminar el trabajador.');
-                    }
-                }
-            });
-        });
+    // Agregar eventos a los botones de acciones
+    document.querySelectorAll('.btnDeleteWorker').forEach(button => {
+      button.addEventListener('click', async (event) => {
+        const workerId = event.currentTarget.getAttribute('data-id');
+        const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este trabajador?');
+        if (confirmDelete) {
+          try {
+            await ipcRenderer.invoke('delete-worker', workerId);
+            alert('Trabajador eliminado con éxito.');
+            const workers = await ipcRenderer.invoke('get-workers');
+            renderWorkersTable(workers); // Recargar la tabla
+          } catch (error) {
+            console.error('Error al eliminar trabajador:', error);
+            alert('Error al eliminar el trabajador.');
+          }
+        }
+      });
+    });
 
-        document.querySelectorAll('.btnEditWorker').forEach(button => {
-            button.addEventListener('click', () => {
-                const workerId = button.getAttribute('data-id');
-                ipcRenderer.send('open-edit-worker-window', workerId);
-            });
-        });
-    } else {
-        tableBody.innerHTML = `<tr><td colspan="9">No se encontraron trabajadores.</td></tr>`;
-    }
+    document.querySelectorAll('.btnEditWorker').forEach(button => {
+      button.addEventListener('click', () => {
+        const workerId = button.getAttribute('data-id');
+        ipcRenderer.send('open-edit-worker-window', workerId);
+      });
+    });
+  } else {
+    tableBody.innerHTML = `<tr><td colspan="9">No se encontraron trabajadores.</td></tr>`;
+  }
 }
 //--------------------MAIN--------------------//
 async function renderMain(content) {
@@ -529,10 +529,10 @@ async function renderMain(content) {
 
   const kpi = await ipcRenderer.invoke('get-campaigns-kpi');
   // 1. Gráfico Agentes por Sitio
-  if (kpi.agentsBySite) {
-    const labels = kpi.agentsBySite.map(e => e.site);
-    const data = kpi.agentsBySite.map(e => e.totalAgents);
-    const ctx = document.getElementById('agentsBySiteChart').getContext('2d');
+  if (kpi.agentsBySite) { //Verificamos que exista la propiedad "agentsBySite" dentro del objeto kpi
+    const labels = kpi.agentsBySite.map(e => e.site); //Extraemos los nombres de los sitios y los guardamos como etiquetas
+    const data = kpi.agentsBySite.map(e => e.totalAgents); //Extraemos el número de agentes por sitio y lo guardamos como datos
+    const ctx = document.getElementById('agentsBySiteChart').getContext('2d'); //Seleccionamos el canvas con id "agentsBySiteChart"
     new Chart(ctx, {
       type: 'bar',
       data: {
@@ -543,27 +543,51 @@ async function renderMain(content) {
           backgroundColor: 'rgba(54, 162, 235, 0.7)'
         }]
       },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      options: { //Opciones de visualización del gráfico
+        plugins: {
+          legend: {
+            display: false //ocultamos la leyenda del gráfico
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true //hacemos que el eje Y comience en 0
+          }
+        }
+      }
     });
   }
+
   // 2. Gráfico Margen por Cliente
-  if (kpi.clientMargins) {
-    const labels = kpi.clientMargins.map(e => e.client);
-    const data = kpi.clientMargins.map(e => e.margen);
+  if (kpi.clientMargins) { // Verificamos que exista la propiedad "clientMargins" dentro del objeto kp
+    const labels = kpi.clientMargins.map(e => e.client); //Extraemos los nombres de los clientes y los guardamos como etiquetas
+    const data = kpi.clientMargins.map(e => e.margen); //Extraemos el margen monetario por cliente y lo guardamos como datos
     const ctx = document.getElementById('marginByClientChart').getContext('2d');
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels,
+        labels, // Etiquetas del eje X (nombres de los clientes)
         datasets: [{
-          label: 'Margen (€)',
-          data,
+          label: 'Margen (€)', //Etiqueta del conjunto de datos
+          data, //Datos del eje Y (margen monetario por cliente)
           backgroundColor: 'rgba(255, 99, 132, 0.7)'
         }]
       },
-      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        }, scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
     });
   }
+
+
   // 3. Tabla KPIs campañas
   const tbody = document.getElementById('campaignsKpiBody');
   tbody.innerHTML = "";
