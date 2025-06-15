@@ -812,6 +812,8 @@ ipcMain.on('close-edit-worker-window', () => {
 
 //-------------------MAIN--------------------//
 
+//---- Resumen de Sitios, Clientes y Trabajadores (KPI) --------------------------------------------------
+
 ipcMain.handle('get-kpi-data', async () => {
     try {
         const totalSites = await Site.countDocuments(); // Total de sitios
@@ -837,4 +839,59 @@ ipcMain.handle('get-kpi-data', async () => {
         console.error('Error al obtener datos de KPI:', error);
         throw error;
     }
+});
+
+//---- Margen de Campañas (KPI) ------------------------------------------------------------------
+ipcMain.handle('get-campaigns-kpi', async () => {
+    // Modelos necesarios
+    const Campaign = require('./src/backend/models/campaigns');
+    const Worker = require('./src/backend/models/workers');
+    const Site = require('./src/backend/models/sites');
+
+    // 1. Traer todas las campañas
+    const campaigns = await Campaign.find().lean();
+
+    // 2. Traer todos los trabajadores (para evitar varias queries)
+    const workers = await Worker.find().lean();
+
+    // 3. Traer todos los sitios (para mapear nombre -> coste/hora)
+    const sitesArr = await Site.find().lean();
+    const sites = {};
+    sitesArr.forEach(s => {
+        sites[s.site_name] = s.cost_per_hour;
+    });
+
+    // 4. Procesar cada campaña
+    const result = campaigns.map(campaign => {
+        // Filtrar trabajadores de esta campaña
+        const workersInCampaign = workers.filter(w => w.campaign === campaign.campaign_name);
+        const horas = workersInCampaign.reduce((acc, w) => acc + (w.hours_worked || 0), 0);
+        // Coste: suma de (horasTrabajador * costeHoraSitio)
+        let coste = 0;
+        workersInCampaign.forEach(w => {
+            const costeHora = sites[w.site] || 0;
+            coste += (w.hours_worked || 0) * costeHora;
+        });
+        // Beneficio: suma de (horasTrabajador * precioHoraCampaña)
+        const beneficio = horas * (campaign.productive_hours_revenue || 0);
+        // Margen monetario
+        const margen = beneficio - coste;
+        // Margen porcentual
+        const margenPorc = beneficio > 0 ? (margen / beneficio) * 100 : 0;
+
+        return {
+            campaign_name: campaign.campaign_name,
+            client: campaign.client,
+            marketUnit: campaign.marketUnit,
+            language: campaign.language,
+            precioHora: campaign.productive_hours_revenue || 0,
+            horas,
+            coste,
+            beneficio,
+            margen,
+            margenPorc
+        };
+    });
+
+    return result;
 });

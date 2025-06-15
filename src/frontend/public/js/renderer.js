@@ -505,49 +505,65 @@ async function renderMain(content) {
           </div>
       </div>
 
-      <h2 class="mt-5">Detalle por Sitio</h2>
+      <h2 class="mt-5">KPIs de Campañas</h2>
       <table class="table table-striped mt-3">
           <thead>
               <tr>
-                  <th>Sitio</th>
-                  <th>Total de Agentes</th>
-                  <th>Total de Horas Trabajadas</th>
+                  <th>Campaña</th>
+                  <th>Cliente</th>
+                  <th>Unidad de Mercado</th>
+                  <th>Idioma</th>
+                  <th>Precio/h</th>
+                  <th>Horas</th>
+                  <th>Coste Total</th>
+                  <th>Beneficio</th>
+                  <th>Margen (€)</th>
+                  <th>Margen (%)</th>
               </tr>
           </thead>
-          <tbody id="siteDetails">
-              <tr><td colspan="3">Cargando datos...</td></tr>
+          <tbody id="campaignsKpiBody">
+              <tr><td colspan="10">Cargando...</td></tr>
           </tbody>
       </table>
   `;
 
-  // Solicitar datos de KPI al backend
+  // Solicitar datos de KPI globales (sitios y clientes)
   try {
     const kpiData = await ipcRenderer.invoke('get-kpi-data');
-
-    // Mostrar el total de sitios y clientes
     document.getElementById('totalSites').textContent = kpiData.totalSites;
     document.getElementById('totalClients').textContent = kpiData.totalClients;
-
-    // Mostrar el detalle por sitio
-    const siteDetails = document.getElementById('siteDetails');
-    siteDetails.innerHTML = ''; // Limpiar contenido actual
-
-    if (kpiData.workers.length > 0) {
-      kpiData.workers.forEach(worker => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-                  <td>${worker._id}</td>
-                  <td>${worker.totalAgents}</td>
-                  <td>${worker.totalHoursWorked}</td>
-              `;
-        siteDetails.appendChild(row);
-      });
-    } else {
-      siteDetails.innerHTML = `<tr><td colspan="3">No hay datos disponibles.</td></tr>`;
-    }
   } catch (error) {
-    console.error('Error al cargar datos de KPI:', error);
-    const siteDetails = document.getElementById('siteDetails');
-    siteDetails.innerHTML = `<tr><td colspan="3">Error al cargar datos.</td></tr>`;
+    document.getElementById('totalSites').textContent = 'Err';
+    document.getElementById('totalClients').textContent = 'Err';
+  }
+
+  // Solicitar KPIs de campañas al backend
+  try {
+    const kpis = await ipcRenderer.invoke('get-campaigns-kpi');
+    const tbody = document.getElementById('campaignsKpiBody');
+    tbody.innerHTML = "";
+    if (kpis.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10">No hay campañas.</td></tr>`;
+      return;
+    }
+    kpis.forEach(kpi => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${kpi.campaign_name}</td>
+        <td>${kpi.client}</td>
+        <td>${kpi.marketUnit}</td>
+        <td>${kpi.language}</td>
+        <td>${kpi.precioHora.toFixed(2)} €</td>
+        <td>${kpi.horas}</td>
+        <td>${kpi.coste.toFixed(2)} €</td>
+        <td>${kpi.beneficio.toFixed(2)} €</td>
+        <td>${kpi.margen.toFixed(2)} €</td>
+        <td>${kpi.margenPorc.toFixed(2)} %</td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (error) {
+    const tbody = document.getElementById('campaignsKpiBody');
+    tbody.innerHTML = `<tr><td colspan="10">Error al cargar KPIs.</td></tr>`;
   }
 }
