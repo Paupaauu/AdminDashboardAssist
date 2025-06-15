@@ -843,42 +843,31 @@ ipcMain.handle('get-kpi-data', async () => {
 
 //---- Margen de Campañas (KPI) ------------------------------------------------------------------
 ipcMain.handle('get-campaigns-kpi', async () => {
-    // Modelos necesarios
     const Campaign = require('./src/backend/models/campaigns');
     const Worker = require('./src/backend/models/workers');
     const Site = require('./src/backend/models/sites');
 
-    // 1. Traer todas las campañas
+    // Traer datos
     const campaigns = await Campaign.find().lean();
-
-    // 2. Traer todos los trabajadores (para evitar varias queries)
     const workers = await Worker.find().lean();
-
-    // 3. Traer todos los sitios (para mapear nombre -> coste/hora)
     const sitesArr = await Site.find().lean();
     const sites = {};
     sitesArr.forEach(s => {
         sites[s.site_name] = s.cost_per_hour;
     });
 
-    // 4. Procesar cada campaña
-    const result = campaigns.map(campaign => {
-        // Filtrar trabajadores de esta campaña
+    // 1. KPIs por campaña
+    const campaignKPIs = campaigns.map(campaign => {
         const workersInCampaign = workers.filter(w => w.campaign === campaign.campaign_name);
         const horas = workersInCampaign.reduce((acc, w) => acc + (w.hours_worked || 0), 0);
-        // Coste: suma de (horasTrabajador * costeHoraSitio)
         let coste = 0;
         workersInCampaign.forEach(w => {
             const costeHora = sites[w.site] || 0;
             coste += (w.hours_worked || 0) * costeHora;
         });
-        // Beneficio: suma de (horasTrabajador * precioHoraCampaña)
         const beneficio = horas * (campaign.productive_hours_revenue || 0);
-        // Margen monetario
         const margen = beneficio - coste;
-        // Margen porcentual
         const margenPorc = beneficio > 0 ? (margen / beneficio) * 100 : 0;
-
         return {
             campaign_name: campaign.campaign_name,
             client: campaign.client,
@@ -893,5 +882,28 @@ ipcMain.handle('get-campaigns-kpi', async () => {
         };
     });
 
-    return result;
+    // 2. Margen por cliente (agrupado)
+    const marginByClient = {};
+    campaignKPIs.forEach(kpi => {
+        if (!marginByClient[kpi.client]) marginByClient[kpi.client] = 0;
+        marginByClient[kpi.client] += kpi.margen;
+    });
+    const clientMargins = Object.entries(marginByClient).map(([client, margen]) => ({ client, margen }));
+
+    // 3. Agentes por sitio (ya lo tienes en get-kpi-data, pero puedes devolverlo aquí para simplificar aún más)
+    const agentsBySite = {};
+    workers.forEach(w => {
+        if (!agentsBySite[w.site]) agentsBySite[w.site] = new Set();
+        agentsBySite[w.site].add(w.agent_id);
+    });
+    const agentsBySiteArr = Object.entries(agentsBySite).map(([site, set]) => ({
+        site,
+        totalAgents: set.size
+    }));
+
+    return {
+        campaignKPIs,
+        clientMargins,
+        agentsBySite: agentsBySiteArr
+    };
 });

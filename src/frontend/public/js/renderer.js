@@ -485,85 +485,106 @@ function renderWorkersTable(workers) {
 //--------------------MAIN--------------------//
 async function renderMain(content) {
   content.innerHTML = `
-      <h1>Situación Global</h1>
-      <div class="row">
-          <div class="col-md-6">
-              <div class="card shadow-sm">
-                  <div class="card-body">
-                      <h5 class="card-title">Total de Sitios</h5>
-                      <p id="totalSites" class="card-text display-4">0</p>
-                  </div>
-              </div>
+    <h1>Situación Global</h1>
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Agentes por Sitio</h5>
+            <canvas id="agentsBySiteChart" height="180"></canvas>
           </div>
-          <div class="col-md-6">
-              <div class="card shadow-sm">
-                  <div class="card-body">
-                      <h5 class="card-title">Total de Clientes</h5>
-                      <p id="totalClients" class="card-text display-4">0</p>
-                  </div>
-              </div>
-          </div>
+        </div>
       </div>
+      <div class="col-md-6">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Margen Monetario por Cliente</h5>
+            <canvas id="marginByClientChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <h2 class="mt-5">KPIs de Campañas</h2>
-      <table class="table table-striped mt-3">
-          <thead>
-              <tr>
-                  <th>Campaña</th>
-                  <th>Cliente</th>
-                  <th>Unidad de Mercado</th>
-                  <th>Idioma</th>
-                  <th>Precio/h</th>
-                  <th>Horas</th>
-                  <th>Coste Total</th>
-                  <th>Beneficio</th>
-                  <th>Margen (€)</th>
-                  <th>Margen (%)</th>
-              </tr>
-          </thead>
-          <tbody id="campaignsKpiBody">
-              <tr><td colspan="10">Cargando...</td></tr>
-          </tbody>
-      </table>
+    <h2 class="mt-5">KPIs de Campañas</h2>
+    <table class="table table-striped mt-3">
+      <thead>
+        <tr>
+          <th>Campaña</th>
+          <th>Cliente</th>
+          <th>Unidad de Mercado</th>
+          <th>Idioma</th>
+          <th>Precio/h</th>
+          <th>Horas</th>
+          <th>Coste Total</th>
+          <th>Beneficio</th>
+          <th>Margen (€)</th>
+          <th>Margen (%)</th>
+        </tr>
+      </thead>
+      <tbody id="campaignsKpiBody">
+        <tr><td colspan="10">Cargando...</td></tr>
+      </tbody>
+    </table>
   `;
 
-  // Solicitar datos de KPI globales (sitios y clientes)
-  try {
-    const kpiData = await ipcRenderer.invoke('get-kpi-data');
-    document.getElementById('totalSites').textContent = kpiData.totalSites;
-    document.getElementById('totalClients').textContent = kpiData.totalClients;
-  } catch (error) {
-    document.getElementById('totalSites').textContent = 'Err';
-    document.getElementById('totalClients').textContent = 'Err';
-  }
-
-  // Solicitar KPIs de campañas al backend
-  try {
-    const kpis = await ipcRenderer.invoke('get-campaigns-kpi');
-    const tbody = document.getElementById('campaignsKpiBody');
-    tbody.innerHTML = "";
-    if (kpis.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10">No hay campañas.</td></tr>`;
-      return;
-    }
-    kpis.forEach(kpi => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td>${kpi.campaign_name}</td>
-        <td>${kpi.client}</td>
-        <td>${kpi.marketUnit}</td>
-        <td>${kpi.language}</td>
-        <td>${kpi.precioHora.toFixed(2)} €</td>
-        <td>${kpi.horas}</td>
-        <td>${kpi.coste.toFixed(2)} €</td>
-        <td>${kpi.beneficio.toFixed(2)} €</td>
-        <td>${kpi.margen.toFixed(2)} €</td>
-        <td>${kpi.margenPorc.toFixed(2)} %</td>
-      `;
-      tbody.appendChild(row);
+  const kpi = await ipcRenderer.invoke('get-campaigns-kpi');
+  // 1. Gráfico Agentes por Sitio
+  if (kpi.agentsBySite) {
+    const labels = kpi.agentsBySite.map(e => e.site);
+    const data = kpi.agentsBySite.map(e => e.totalAgents);
+    const ctx = document.getElementById('agentsBySiteChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Nº de Agentes',
+          data,
+          backgroundColor: 'rgba(54, 162, 235, 0.7)'
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
     });
-  } catch (error) {
-    const tbody = document.getElementById('campaignsKpiBody');
-    tbody.innerHTML = `<tr><td colspan="10">Error al cargar KPIs.</td></tr>`;
   }
+  // 2. Gráfico Margen por Cliente
+  if (kpi.clientMargins) {
+    const labels = kpi.clientMargins.map(e => e.client);
+    const data = kpi.clientMargins.map(e => e.margen);
+    const ctx = document.getElementById('marginByClientChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Margen (€)',
+          data,
+          backgroundColor: 'rgba(255, 99, 132, 0.7)'
+        }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+  }
+  // 3. Tabla KPIs campañas
+  const tbody = document.getElementById('campaignsKpiBody');
+  tbody.innerHTML = "";
+  if (kpi.campaignKPIs.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10">No hay campañas.</td></tr>`;
+    return;
+  }
+  kpi.campaignKPIs.forEach(kpiRow => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${kpiRow.campaign_name}</td>
+      <td>${kpiRow.client}</td>
+      <td>${kpiRow.marketUnit}</td>
+      <td>${kpiRow.language}</td>
+      <td>${kpiRow.precioHora.toFixed(2)} €</td>
+      <td>${kpiRow.horas}</td>
+      <td>${kpiRow.coste.toFixed(2)} €</td>
+      <td>${kpiRow.beneficio.toFixed(2)} €</td>
+      <td>${kpiRow.margen.toFixed(2)} €</td>
+      <td>${kpiRow.margenPorc.toFixed(2)} %</td>
+    `;
+    tbody.appendChild(row);
+  });
 }
